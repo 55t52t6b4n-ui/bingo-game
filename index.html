@@ -1037,6 +1037,8 @@ document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
 document.getElementById('playAgainBtn').addEventListener('click', () => { overlay.classList.remove('show'); resetMyBoard(); });
 document.getElementById('rulesToggle').addEventListener('click', () => {
   document.getElementById('rulesPanel').classList.toggle('open');
+  document.getElementById('joinBtn').addEventListener('click', createRoomInSupabase);
+
 });
 </script>
   !-- เรียกใช้เครื่องมือของ Supabase -->
@@ -1044,11 +1046,38 @@ document.getElementById('rulesToggle').addEventListener('click', () => {
 <script>
  
   const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
-  
-  const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-  
-  // สร้างการเชื่อมต่อ
+    const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // ฟังก์ชันสำหรับส่งข้อมูลเข้าฐานข้อมูล Supabase
+  async function createRoomInSupabase() {
+    // 1. ดึงข้อมูลจากช่องกรอกในหน้าเว็บ (เดี๋ยวเราต้องมาแก้ ID ให้ตรงกับโค้ดของคุณ)
+    const inputName = document.getElementById("playerNameInput").value;
+    const inputRoomCode = document.getElementById("roomCodeInput").value;
+    const inputTotal = document.getElementById("maxPlayersInput").value;
+
+    // 2. ส่งข้อมูลเข้าตาราง room
+    const { data, error } = await supabase
+      .from('room')
+      .insert([
+        { 
+          player_name: inputName, 
+          room_code: inputRoomCode,
+          total_player: parseInt(inputTotal)
+        }
+      ]);
+
+    if (error) {
+      console.error("บันทึกไม่สำเร็จ:", error);
+      alert("สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } else {
+      console.log("บันทึกสำเร็จ:", data);
+      alert("สร้างห้องสำเร็จ!");
+      // TODO: ใส่คำสั่งให้เปลี่ยนไปหน้ากระดานบิงโก หรือซ่อนหน้าต่างนี้
+    }
+  }
+
+  
+
 </script>
 </body>
 </html>
