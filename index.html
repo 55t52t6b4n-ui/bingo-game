@@ -177,10 +177,7 @@
 </style>
 
 <script>
-  // -------------------------------------------------------------
   // ระบบ UI อิสระ - ทำงานได้ทันที 100% แม้โหลด Supabase ไม่สำเร็จ
-  // แก้ปัญหาปุ่มค้าง กรอบเขียวไม่ขยับแบบเด็ดขาด!
-  // -------------------------------------------------------------
   function updateModeUI() {
     try {
       var radios = document.getElementsByName('roomMode');
@@ -238,7 +235,7 @@
       </select>
     </div>
 
-    <!-- สังเกต onchange="updateModeUI()" นี่คือจุดที่แก้บั๊กปุ่มกดแล้วไม่ตอบสนอง -->
+    <!-- ผูก event เข้าที่ปุ่มตรงๆ ป้องกัน Javascript Error ทำให้ปุ่มเสีย -->
     <div class="mode-toggle">
       <label class="mode-option active" id="modeOptionCreate">
         <input type="radio" name="roomMode" value="create" checked onchange="updateModeUI()"> สร้างห้องใหม่
@@ -259,7 +256,7 @@
     </div>
 
     <div class="lobby-error" id="lobbyError"></div>
-    <button class="btn btn-secondary" id="joinBtn" type="button">เข้าสู่เกม</button>
+    <button class="btn btn-secondary" id="joinBtn" type="button" onclick="handleJoin()">เข้าสู่เกม</button>
     <div class="lobby-hint">ผู้เล่นทุกคนในห้องเดียวกันจะได้รับคำถามชุดเดียวกันตามลำดับ และเห็นความคืบหน้าของกันและกันแบบเรียลไทม์</div>
   </div>
 </div>
@@ -363,14 +360,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
 <script defer>
-// --- เชื่อมต่อ Supabase ---
-const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
-const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-let supabase = null; // กำหนดค่าเริ่มต้นเป็น null ก่อน
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-
-<script defer>
 // ==========================================
 // การตั้งค่า Supabase
 // ==========================================
@@ -382,7 +371,7 @@ let supabase = null;
 // ข้อมูลคำถามและไอเทมในเกมบิงโก
 // ==========================================
 const ITEMS = [
-  {t:"โรคอ้วน", i:"⚖️"},
+  {t:"โรคอ้วน", i:"⚖️"}, {t:"โรคเบาหวาน", i:"🩸"}, {t:"โรคความดันโลหิตสูง", i:"💢"},
   {t:"โรคหัวใจ", i:"❤️‍🩹"}, {t:"โรคตับและไขมันพอกตับ", i:"🩺"}, {t:"ดื่มน้ำอัดลมทุกวัน", i:"🥤"},
   {t:"กินของทอดบ่อย", i:"🍤"}, {t:"กินหวานจัด", i:"🍬"}, {t:"นั่งนาน ไม่ขยับตัว", i:"🪑"},
   {t:"นอนดึกเป็นประจำ", i:"🌙"}, {t:"สูบบุหรี่", i:"🚬"}, {t:"ดื่มแอลกอฮอล์บ่อย", i:"🍺"},
@@ -463,7 +452,6 @@ let maxPlayers = 0;
 let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 let tickHandle = null;
-let realtimeChannel = null;
 
 // ==========================================
 // ฟังก์ชันสุ่มและตัวช่วยต่างๆ
@@ -499,140 +487,95 @@ function seededShuffle(arr, seedStr){
   }
   return a;
 }
-function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
+function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
-/* ---------- lobby UI controls ---------- */
-function updateModeUI(){
-  const mode = document.querySelector('input[name="roomMode"]:checked').value;
-  const creating = mode === 'create';
-  if(modeOptionCreate) modeOptionCreate.classList.toggle('active', creating);
-  if(modeOptionJoin) modeOptionJoin.classList.toggle('active', !creating);
-  if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
-  if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
-  if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
-}
-
-document.querySelectorAll('input[name="roomMode"]').forEach(r => {
-  r.addEventListener('change', updateModeUI);
-});
-updateModeUI();
-
-/* ---------- handle join / create room ---------- */
 async function handleJoin(){
   const lobbyError = document.getElementById('lobbyError');
   const joinBtn = document.getElementById('joinBtn');
-  if(!lobbyError || !joinBtn) return;
-  
   lobbyError.textContent = '';
-  const name = document.getElementById('playerNameInput').value.trim();
-  const grade = document.getElementById('gradeSelect').value;
-  let mode = 'create';
   
-  // ตรวจสอบโหมด
-  const radios = document.getElementsByName('roomMode');
-  for(let i=0; i<radios.length; i++) {
-    if(radios[i].checked) mode = radios[i].value;
-  }
-
-  if(!name){ lobbyError.textContent = 'กรุณากรอกชื่อผู้เล่น'; return; }
-  if(!grade){ lobbyError.textContent = 'กรุณาเลือกระดับชั้น'; return; }
-
-  // ตรวจสอบว่าไลบรารี Supabase โหลดเสร็จหรือยัง
-  if (!window.supabase) {
-      lobbyError.textContent = 'ระบบฐานข้อมูลกำลังโหลด หรือถูกบล็อกโดยอินเทอร์เน็ต กรุณาลองใหม่ในอีกสักครู่';
-      return;
-  }
-  
-  // สร้าง Supabase Client หากยังไม่ได้สร้าง
-  if (!supabase) {
-      try {
-          supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-      } catch (e) {
-          lobbyError.textContent = 'เกิดข้อผิดพลาดในการเริ่มระบบฐานข้อมูล';
-          return;
-      }
-  }
-
-  joinBtn.disabled = true;
-  joinBtn.textContent = 'กำลังเชื่อมต่อ...';
-
   try {
-    if(mode === 'create'){
-      let code = document.getElementById('roomCodeInput').value.trim() || genRoomCode();
-      const max = Math.max(1, Math.min(30, parseInt(document.getElementById('maxPlayersInput').value, 10) || 4));
-
-      const { error: roomErr } = await supabase
-        .from('rooms')
-        .insert([{ room_code: code, max_players: max }]);
-
-      if (roomErr) {
-        if (roomErr.code === '23505') throw new Error('รหัสห้องนี้ถูกใช้งานไปแล้ว กรุณาตั้งใหม่หรือเว้นว่าง');
-        throw roomErr;
+    // โหลด Supabase ช้าๆ อย่างปลอดภัย
+    if(!supabase) {
+      if(window.supabase) {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      } else {
+        throw new Error("ระบบฐานข้อมูลยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วกดใหม่");
       }
-      
-      roomCode = code;
-      maxPlayers = max;
-    } else {
-      const code = document.getElementById('roomCodeInput').value.trim();
-      if(!code){
-        lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
-        joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('room_code', code)
-        .single();
-
-      if (error || !data) throw new Error('ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง');
-      
-      roomCode = code;
-      maxPlayers = data.max_players;
     }
-
-    playerId = genPlayerId();
+    
+    const name = document.getElementById('playerNameInput').value.trim();
+    const grade = document.getElementById('gradeSelect').value;
+    
+    let mode = 'create';
+    const radios = document.getElementsByName('roomMode');
+    for(let i=0; i<radios.length; i++) {
+      if(radios[i].checked) mode = radios[i].value;
+    }
+    
+    if(!name) throw new Error('กรุณากรอกชื่อผู้เล่น');
+    if(!grade) throw new Error('กรุณาเลือกระดับชั้น');
+    
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'กำลังเชื่อมต่อ...';
+    
+    let currentRoomCode = document.getElementById('roomCodeInput').value.trim();
+    let currentMaxPlayers = 4;
+    
+    if(mode === 'create') {
+      // ถ้าไม่กรอกรหัส ให้สุ่ม
+      currentRoomCode = currentRoomCode || String(Math.floor(1000 + Math.random()*9000));
+      currentMaxPlayers = Math.max(1, Math.min(30, parseInt(document.getElementById('maxPlayersInput').value, 10) || 4));
+      
+      const { error: roomErr } = await supabase.from('rooms').insert([{ room_code: currentRoomCode, max_players: currentMaxPlayers }]);
+      if (roomErr) {
+        if (roomErr.code === '23505') throw new Error('รหัสห้องนี้มีคนใช้แล้ว กรุณาเปลี่ยนใหม่หรือเว้นว่างไว้');
+        throw new Error(roomErr.message || 'สร้างห้องไม่สำเร็จ');
+      }
+    } else {
+      if(!currentRoomCode) throw new Error('กรุณากรอกรหัสห้อง');
+      const { data, error } = await supabase.from('rooms').select('*').eq('room_code', currentRoomCode).single();
+      if (error || !data) throw new Error('ไม่พบรหัสห้องนี้ในระบบ');
+      currentMaxPlayers = data.max_players;
+    }
+    
+    const myPlayerId = genPlayerId();
+    
+    const { error: progErr } = await supabase.from('room_progress').insert([{
+      room_code: currentRoomCode,
+      player_id: myPlayerId,
+      name: name,
+      grade: grade,
+      marked: 0,
+      total: 24,
+      won: false
+    }]);
+    
+    if (progErr) {
+      if(progErr.code === '23505') throw new Error('ชื่อคุณซ้ำกับคนในห้องนี้ กรุณาเปลี่ยนชื่อ');
+      throw new Error(progErr.message || 'เข้าร่วมห้องไม่สำเร็จ');
+    }
+    
+    // ตั้งค่าตัวแปรระดับ Global เมื่อเข้าห้องสำเร็จ
+    roomCode = currentRoomCode;
+    playerId = myPlayerId;
     playerName = name;
     playerGrade = grade;
-
-    const { error: progErr } = await supabase
-      .from('room_progress')
-      .insert([{
-        room_code: roomCode,
-        player_id: playerId,
-        name: playerName,
-        grade: playerGrade,
-        marked: 0,
-        total: 24,
-        won: false
-      }]);
-      
-    if (progErr) {
-        if (progErr.code === '23505') throw new Error('ชื่อนี้เข้าร่วมห้องแล้ว กรุณาเปลี่ยนชื่อใหม่');
-        throw progErr;
-    }
-
+    maxPlayers = currentMaxPlayers;
+    
     document.getElementById('lobbyOverlay').style.display = 'none';
     document.getElementById('roomCodeDisplay').textContent = roomCode;
     initRoomSession();
     
-  } catch (err) {
-    console.error("Supabase Error:", err);
-    lobbyError.textContent = err.message || 'การเชื่อมต่อขัดข้อง กรุณาลองใหม่อีกครั้ง';
+  } catch(err) {
+    console.error(err);
+    lobbyError.textContent = err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย';
     joinBtn.disabled = false;
     joinBtn.textContent = 'เข้าสู่เกม';
   }
 }
 
-// ผูก Event Listener แบบนี้ปลอดภัยกว่า
-setTimeout(() => {
-    const btn = document.getElementById('joinBtn');
-    if(btn) btn.addEventListener('click', handleJoin);
-}, 100);
-
-/* ---------- Realtime Subscriptions ---------- */
 let realtimeChannel = null;
 
 function subscribeRealtime() {
@@ -676,19 +619,18 @@ async function initRoomSession(){
   renderDeckCount();
   resetMyBoard();
 
+  // ดึงข้อมูลครั้งแรก
   await fetchDrawState();
   await pollPlayers();
   await fetchWinners();
 
+  // เปิดใช้งาน WebSockets Realtime
   subscribeRealtime();
 
   tickHandle && clearInterval(tickHandle);
   tickHandle = setInterval(tick, 500);
 }
 
-// ==========================================
-// การควบคุมบอร์ดและการจับไพ่
-// ==========================================
 async function fetchDrawState() {
   if(!supabase) return;
   const { data, error } = await supabase
@@ -742,6 +684,7 @@ async function drawCard(){
     hint.className = 'hint';
   }
   
+  // เรียกฟังก์ชันในฐานข้อมูลเพื่อป้องกันกดพร้อมกัน
   if(supabase) {
     const { error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
     if (error) {
@@ -936,9 +879,6 @@ async function announceWin(){
   }]);
 }
 
-// ==========================================
-// การดึงข้อมูลผู้เล่นคนอื่นๆ
-// ==========================================
 async function pollPlayers(){
   if(!supabase) return;
   const { data, error } = await supabase
@@ -1014,16 +954,25 @@ function renderWinnerBanner(winners){
   winnerBanner.classList.add('show');
 }
 
-// ผูกปุ่มเกมทั้งหมด
+// ผูกปุ่มเข้ากับฟังก์ชันแบบปลอดภัย
 setTimeout(() => {
-  document.getElementById('drawBtn')?.addEventListener('click', drawCard);
-  document.getElementById('revealBtn')?.addEventListener('click', revealAnswerLocal);
-  document.getElementById('newGameBtn')?.addEventListener('click', resetMyBoard);
-  document.getElementById('playAgainBtn')?.addEventListener('click', () => { 
+  const btnDraw = document.getElementById('drawBtn');
+  if(btnDraw) btnDraw.addEventListener('click', drawCard);
+  
+  const btnReveal = document.getElementById('revealBtn');
+  if(btnReveal) btnReveal.addEventListener('click', revealAnswerLocal);
+  
+  const btnNewGame = document.getElementById('newGameBtn');
+  if(btnNewGame) btnNewGame.addEventListener('click', resetMyBoard);
+  
+  const btnPlayAgain = document.getElementById('playAgainBtn');
+  if(btnPlayAgain) btnPlayAgain.addEventListener('click', () => { 
     document.getElementById('overlay').classList.remove('show'); 
     resetMyBoard(); 
   });
-  document.getElementById('rulesToggle')?.addEventListener('click', () => {
+  
+  const btnRules = document.getElementById('rulesToggle');
+  if(btnRules) btnRules.addEventListener('click', () => {
     document.getElementById('rulesPanel').classList.toggle('open');
   });
 }, 100);
