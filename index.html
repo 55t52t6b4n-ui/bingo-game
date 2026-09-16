@@ -500,10 +500,19 @@
 </div>
 
 <script>
-// --- การเชื่อมต่อ Supabase ---
-const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
-const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+// --- เชื่อมต่อ Supabase แบบป้องกันการพัง (Crash-Proof) ---
+let supabase = null;
+try {
+  if (window.supabase) {
+    const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
+    const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  } else {
+    console.error("Supabase library is not loaded. Network might be blocking it.");
+  }
+} catch (err) {
+  console.error("Supabase Initialization Error:", err);
+}
 
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"},
@@ -606,7 +615,7 @@ let roomDrawnAt = 0;
 let tickHandle = null;
 let realtimeChannel = null;
 
-// จับคู่กับหน้าตา UI (Safeguard เพื่อป้องกัน Error เวลาหา Element ไม่เจอ)
+// จับคู่กับหน้าตา UI (Safeguard แบบปลอดภัยที่สุด)
 const els = {
   boardEl: document.getElementById('board'),
   questionText: document.getElementById('questionText'),
@@ -690,6 +699,7 @@ function updateModeUI(){
   if(els.roomCodeInput) els.roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
 }
 
+// ผูก Event ทันทีที่โหลดหน้าเสร็จ เพื่อไม่ให้ปุ่มค้าง
 document.querySelectorAll('input[name="roomMode"]').forEach(r => {
   r.addEventListener('change', updateModeUI);
 });
@@ -699,6 +709,13 @@ async function handleJoin(){
   if(!els.lobbyError || !els.playerNameInput || !els.gradeSelect || !els.joinBtn) return;
   
   els.lobbyError.textContent = '';
+  
+  // เช็คก่อนว่าโหลด Supabase ผ่านหรือไม่ (ถ้าเน็ตบล็อก)
+  if (!supabase) {
+    els.lobbyError.textContent = 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (เน็ตอาจบล็อก Supabase) แนะนำให้ใช้เน็ตมือถือ (4G/5G) ทดสอบดูครับ';
+    return;
+  }
+
   const name = els.playerNameInput.value.trim();
   const grade = els.gradeSelect.value;
   const modeObj = document.querySelector('input[name="roomMode"]:checked');
@@ -715,17 +732,16 @@ async function handleJoin(){
       let code = els.roomCodeInput.value.trim() || genRoomCode();
       const max = Math.max(1, Math.min(30, parseInt(els.maxPlayersInput.value, 10) || 4));
 
-      // 1) สร้างห้องในตาราง rooms (อิงจาก Database Schema ใหม่ของคุณ)
+      // สร้างห้องในตาราง rooms
       const { error: roomError } = await supabase
         .from('rooms')
         .insert([{ room_code: code, max_players: max }]);
 
       if (roomError) {
-        // กรณีรหัสห้องซ้ำ หรือ error อื่นๆ
         if(roomError.code === '23505') {
           els.lobbyError.textContent = `รหัสห้อง ${code} มีคนใช้แล้ว โปรดเปลี่ยนรหัสใหม่ครับ`;
         } else {
-          els.lobbyError.textContent = 'สร้างห้องไม่สำเร็จ (กรุณาเช็คฐานข้อมูล) ลองอีกครั้งครับ';
+          els.lobbyError.textContent = 'สร้างห้องไม่สำเร็จ ลองเช็คฐานข้อมูลอีกครั้งครับ';
         }
         els.joinBtn.disabled = false; 
         els.joinBtn.textContent = 'เข้าสู่เกม';
@@ -742,7 +758,6 @@ async function handleJoin(){
         return;
       }
 
-      // ดึงข้อมูลห้อง
       const { data, error } = await supabase
         .from('rooms')
         .select('*')
@@ -761,7 +776,7 @@ async function handleJoin(){
     playerName = name;
     playerGrade = grade;
 
-    // 2) บันทึกชื่อผู้เล่นในตาราง room_progress ทันที
+    // บันทึกชื่อผู้เล่นในตาราง room_progress
     const { error: progError } = await supabase
       .from('room_progress')
       .insert([{
@@ -814,12 +829,10 @@ async function initRoomSession(){
 
   resetMyBoard();
   
-  // ดึงข้อมูลครั้งแรก
   await fetchInitialDrawState();
   await fetchPlayers();
   await fetchWinners();
 
-  // เปิดใช้งาน Realtime สมบูรณ์
   subscribeRealtime();
 
   tickHandle && clearInterval(tickHandle);
@@ -834,10 +847,10 @@ function subscribeRealtime() {
       syncDrawState(payload.new);
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_progress', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchPlayers(); // มีคนอัปเดตคะแนนให้โหลดรายชื่อใหม่
+      fetchPlayers(); 
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_winners', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchWinners(); // มีคนชนะให้อัปเดตป้ายประกาศ
+      fetchWinners();
     })
     .subscribe();
 }
@@ -875,7 +888,6 @@ function syncDrawState(newState) {
 async function fetchPlayers() {
   const { data, error } = await supabase.from('room_progress').select('*').eq('room_code', roomCode);
   if(!error && data) {
-    // เรียงคะแนนจากมากไปน้อย
     data.sort((a,b) => (b.marked || 0) - (a.marked || 0));
     renderPlayers(data);
   }
@@ -901,7 +913,7 @@ function resetMyBoard(){
   if(els.overlay) els.overlay.classList.remove('show');
   renderBoard();
   renderProgress();
-  syncMyProgressToDB(false); // Reset status
+  syncMyProgressToDB(false); 
 }
 
 function renderDeckCount(){
@@ -1003,7 +1015,6 @@ async function drawCard(){
   }
   if(els.drawBtn) els.drawBtn.disabled = true;
 
-  // เรียกใช้ฟังก์ชันในฐานข้อมูล (RPC) ป้องกันคนกดพร้อมกัน
   const { data, error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
   if (error) {
     console.error("RPC Error:", error);
@@ -1013,12 +1024,10 @@ async function drawCard(){
     }
     if(els.drawBtn) els.drawBtn.disabled = false;
   }
-  // ทันทีที่ DB อัปเดต สัญญาณ Realtime จะเรียก syncDrawState ให้ทุกคนเอง
 }
 
 function tick(){
   if(!current || revealed) return;
-  // จับเวลา 10 วินาที เทียบกับเวลาที่ดึงการ์ดออกมา
   const elapsed = Date.now() - roomDrawnAt;
   const remaining = Math.max(10 - Math.floor(elapsed/1000), 0);
   if(els.timerRing){
@@ -1051,7 +1060,6 @@ function revealAnswerLocal(){
     }
   }
   
-  // เก็บประวัติ
   const isDuplicate = history.length > 0 && history[history.length-1].q === current.q;
   if(!isDuplicate){
     history.push({q: current.q, a: current.a});
@@ -1114,7 +1122,6 @@ function checkWin(){
   }
 }
 
-/* ---------- อัปเดตข้อมูลผู้เล่นและผู้ชนะไปฐานข้อมูล ---------- */
 async function syncMyProgressToDB(isWon){
   if(!roomCode || !playerId) return;
   const { error } = await supabase
@@ -1126,13 +1133,11 @@ async function syncMyProgressToDB(isWon){
     })
     .eq('room_code', roomCode)
     .eq('player_id', playerId);
-    
-  if (error) console.error("Update Progress Error:", error);
 }
 
 async function announceWinToDB(){
   if(!roomCode || !playerId) return;
-  const { error } = await supabase
+  await supabase
     .from('room_winners')
     .insert([{
       room_code: roomCode,
@@ -1140,11 +1145,8 @@ async function announceWinToDB(){
       name: playerName,
       grade: playerGrade
     }]);
-    
-  if (error) console.error("Winner Announcement Error:", error);
 }
 
-/* ---------- Event Listeners ---------- */
 if(els.drawBtn) els.drawBtn.addEventListener('click', drawCard);
 if(els.revealBtn) els.revealBtn.addEventListener('click', revealAnswerLocal);
 const newGameBtn = document.getElementById('newGameBtn');
