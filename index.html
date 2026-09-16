@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- เรียกใช้เครื่องมือของ Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   :root{
     --paper: #FAF6E6;
@@ -40,7 +41,6 @@
   }
   .wrap{max-width: 1040px; margin: 0 auto;}
 
-  /* ---- Hero chalkboard ---- */
   .hero{
     background: var(--wood);
     border-radius: 22px;
@@ -79,6 +79,7 @@
     margin: 0 0 22px;
     font-weight: 400;
   }
+  
   .btn{
     font-family:'Mitr', sans-serif;
     font-size: 16px;
@@ -103,7 +104,6 @@
     border: 1.5px dashed rgba(245,241,227,0.5);
   }
 
-  /* ---- status row ---- */
   .status{
     display:flex; align-items:center; justify-content:space-between;
     gap:16px; flex-wrap:wrap;
@@ -121,7 +121,6 @@
     padding:8px 16px; cursor:pointer;
   }
 
-  /* ---- rules panel ---- */
   .rules{
     background:#fff; border:1.5px solid var(--paper-line); border-radius:16px;
     padding:20px 22px; margin: 0 4px 22px; display:none;
@@ -132,7 +131,6 @@
   .rules ul{margin:6px 0 14px; padding-left:20px;}
   .rules ul:last-child{margin-bottom:0;}
 
-  /* ---- layout ---- */
   .grid-layout{
     display:grid; grid-template-columns: 1fr 1.15fr; gap:20px;
   }
@@ -140,7 +138,6 @@
     .grid-layout{grid-template-columns: 1fr;}
   }
 
-  /* ---- question deck panel ---- */
   .panel{
     background:#fff; border-radius:18px; padding:22px; box-shadow: var(--card-shadow);
     border: 1.5px solid var(--paper-line);
@@ -149,6 +146,7 @@
     font-family:'Mitr'; font-size:14px; color: var(--board-green);
     display:flex; justify-content:space-between; margin-bottom:14px;
   }
+  
   .question-box{
     background: var(--board-green);
     border-radius:14px; padding:26px 20px; min-height:120px;
@@ -172,6 +170,7 @@
     content: attr(data-t); position:relative;
   }
   .timer-ring.hidden{display:none;}
+  
   .answer-reveal{
     margin-top:14px; text-align:center; font-family:'Mitr'; font-size:15px;
     color: var(--good); display:none;
@@ -198,7 +197,6 @@
   }
   .history-item .num{color:var(--board-green); font-weight:600; font-family:'Mitr'; flex-shrink:0;}
 
-  /* ---- board panel ---- */
   .board-panel{background: var(--wood); border-radius:18px; padding:12px; box-shadow: var(--card-shadow);}
   .board-inner{background:#fff; border-radius:12px; padding:16px;}
   .board-header{
@@ -240,7 +238,6 @@
   }
   .cell.win-line{outline: 3px solid var(--yellow); outline-offset:-2px;}
 
-  /* ---- win overlay ---- */
   .overlay{
     position:fixed; inset:0; background:rgba(34,51,43,0.72);
     display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
@@ -258,7 +255,6 @@
     text-align:center; margin-top:34px; color: var(--ink-soft); font-size:12.5px;
   }
 
-  /* ---- lobby / join screen ---- */
   .lobby-overlay{
     position:fixed; inset:0; z-index:100; overflow-y:auto;
     background-color: var(--paper);
@@ -278,6 +274,7 @@
   .lobby-card .lobby-sub{
     text-align:center; color:var(--ink-soft); font-size:13.5px; margin-bottom:20px;
   }
+  
   .field{margin-bottom:16px;}
   .field label{
     display:block; font-family:'Mitr'; font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500;
@@ -300,7 +297,6 @@
   .lobby-card .btn{width:100%;}
   .lobby-hint{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.6;}
 
-  /* ---- room info bar ---- */
   .room-bar{
     display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
     margin: 16px 4px 0; font-family:'Mitr'; font-size:13px; color:var(--board-green);
@@ -311,7 +307,6 @@
   }
   .room-pill b{color:var(--board-green-dark); letter-spacing:1px;}
 
-  /* ---- players panel ---- */
   .players-panel{margin-top:22px;}
   .players-list{display:flex; flex-direction:column; gap:8px;}
   .player-row{
@@ -335,7 +330,6 @@
   .player-count{font-size:12px; color:var(--ink-soft); flex-shrink:0; white-space:nowrap;}
   .players-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:14px;}
 
-  /* ---- room-wide winner banner ---- */
   .winner-banner{
     display:none; background: var(--yellow); border:1.5px solid var(--yellow-dark); border-radius:14px;
     padding:12px 16px; text-align:center; font-family:'Mitr'; font-size:14px; color:var(--board-green-dark);
@@ -500,10 +494,9 @@
 </div>
 
 <script>
-// --- เชื่อมต่อ Supabase ---
 const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"},
@@ -608,7 +601,10 @@ let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 
 let tickHandle = null;
+let pollDrawHandle = null;
+let pollPlayersHandle = null;
 
+// DOM Elements
 const boardEl = document.getElementById('board');
 const questionText = document.getElementById('questionText');
 const answerReveal = document.getElementById('answerReveal');
@@ -641,7 +637,6 @@ const playersList = document.getElementById('playersList');
 const playersPanelCount = document.getElementById('playersPanelCount');
 const winnerBanner = document.getElementById('winnerBanner');
 
-/* ---------- random helpers ---------- */
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -677,7 +672,29 @@ function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
-/* ---------- lobby ---------- */
+async function storageGet(key){
+  try{
+    const res = await window.storage.get(key, true);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{ return await window.storage.set(key, JSON.stringify(value), true); }
+  catch(e){ console.error('storage set failed', key, e); return null; }
+}
+async function storageListValues(prefix){
+  const out = [];
+  try{
+    const res = await window.storage.list(prefix, true);
+    const keys = (res && res.keys) || [];
+    for(const k of keys){
+      const v = await storageGet(k);
+      if(v) out.push(Object.assign({_key:k}, v));
+    }
+  }catch(e){ /* no keys yet */ }
+  return out;
+}
+
 function updateModeUI(){
   const mode = document.querySelector('input[name="roomMode"]:checked').value;
   const creating = mode === 'create';
@@ -702,54 +719,112 @@ async function handleJoin(){
   joinBtn.disabled = true;
   joinBtn.textContent = 'กำลังเชื่อมต่อ...';
 
-  // --- ระบบส่งข้อมูลเข้า Supabase ---
   if(mode === 'create'){
     let code = roomCodeInput.value.trim() || genRoomCode();
-    const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
-
-    const { data, error } = await supabase
-      .from('room')
-      .insert([
-        { 
-          player_name: name, 
-          room_code: code,
-          total_player: max
-        }
-      ]);
-
-    if (error) {
-      console.error("Supabase Error:", error);
-      lobbyError.textContent = 'สร้างห้องไม่สำเร็จ (ฐานข้อมูลมีปัญหา) กรุณาลองใหม่อีกครั้ง';
+    
+    // ตรวจสอบใน Storage จำลองก่อน
+    const existing = await storageGet(`${KEY_PREFIX}:room:${code}:meta`);
+    if(existing){
+      lobbyError.textContent = `รหัสห้อง ${code} มีคนใช้อยู่แล้ว ลองรหัสอื่น หรือเลือก "เข้าร่วมห้องเดิม" แทน`;
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
+    
+    const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
+    
+    // ส่งข้อมูลเข้าตาราง room ใน Supabase
+    try {
+      const { data, error } = await supabaseClient
+        .from('room')
+        .insert([
+          { 
+            player_name: name, 
+            room_code: code,
+            total_player: max
+          }
+        ]);
 
+      if (error) {
+        console.error("Supabase Error:", error);
+        lobbyError.textContent = "สร้างห้องบนฐานข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+        joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
+        return; // หยุดการทำงานถ้าส่งข้อมูลไม่ผ่าน
+      }
+    } catch(err) {
+      console.error("Exception:", err);
+    }
+    } catch(err) {
+      console.warn("Supabase not fully setup or blocked, continuing with local storage fallback", err);
+    }
+    
+    const ok = await storageSet(`${KEY_PREFIX}:room:${code}:meta`, {maxPlayers: max, createdAt: Date.now()});
+    if(!ok){
+      lobbyError.textContent = 'สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
+      return;
+    }
     roomCode = code;
     maxPlayers = max;
   } else {
-    // เข้าร่วมห้องเดิม
     const code = roomCodeInput.value.trim();
     if(!code){
       lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
+    const meta = await storageGet(`${KEY_PREFIX}:room:${code}:meta`);
+    if(!meta){
+      lobbyError.textContent = 'ไม่พบห้องนี้ กรุณาตรวจสอบรหัสห้องอีกครั้ง';
+      joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
+      return;
+    }
     roomCode = code;
-    maxPlayers = 4;
+    maxPlayers = meta.maxPlayers;
   }
 
   playerId = genPlayerId();
   playerName = name;
   playerGrade = grade;
 
-  // พาเข้าสู่กระดานเกม
+  await storageSet(`${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`, {
+    name: playerName, grade: playerGrade, marked: 0, total: 24, won: false, updatedAt: Date.now()
+  });
+
   lobbyOverlay.style.display = 'none';
   roomCodeDisplay.textContent = roomCode;
   initRoomSession();
 }
-joinBtn.addEventListener('click', handleJoin);
 
-/* ---------- room session ---------- */
+// ------------------- Realtime -------------------
+let realtimeChannel = null;
+
+function setupRealtime() {
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel);
+  }
+
+  // สร้าง Channel สำหรับฟังการเปลี่ยนแปลงของตาราง room
+  realtimeChannel = supabaseClient.channel(`room-channel-${roomCode}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'room',
+        filter: `room_code=eq.${roomCode}` // กรองเฉพาะห้องนี้
+      },
+      (payload) => {
+        console.log('Realtime change received!', payload);
+        // เมื่อมีการเปลี่ยนแปลงใดๆ ให้ไปดึงข้อมูลผู้เล่นมาแสดงใหม่
+        pollPlayers(); 
+      }
+    )
+    .subscribe((status) => {
+      console.log(`Realtime Subscription status: ${status}`);
+    });
+}
+// ------------------------------------------------
+
 function initRoomSession(){
   deck = seededShuffle(QUESTIONS, roomCode);
   roomDrawIndex = 0;
@@ -759,7 +834,7 @@ function initRoomSession(){
   history = [];
 
   questionText.className = 'placeholder-text';
-  questionText.textContent = 'เริ่มจับการ์ดคำถามเพื่อเริ่มเกม';
+  questionText.textContent = 'รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม';
   answerReveal.classList.remove('show');
   drawBtn.disabled = false;
   drawBtn.textContent = 'จับการ์ดคำถาม';
@@ -768,9 +843,18 @@ function initRoomSession(){
   renderDeckCount();
 
   resetMyBoard();
+  
+  // เรียกใช้ Realtime 
+  setupRealtime();
 
+  pollDrawState();
+  pollPlayers();
   tickHandle && clearInterval(tickHandle);
+  pollDrawHandle && clearInterval(pollDrawHandle);
+  pollPlayersHandle && clearInterval(pollPlayersHandle);
   tickHandle = setInterval(tick, 500);
+  pollDrawHandle = setInterval(pollDrawState, 1500);
+  pollPlayersHandle = setInterval(pollPlayers, 2000);
 }
 
 function resetMyBoard(){
@@ -786,7 +870,30 @@ function resetMyBoard(){
   overlay.classList.remove('show');
   renderBoard();
   renderProgress();
+  syncProgress(false);
 }
+
+// นำข้อมูลเข้า Database
+async function upsertPlayerToDB(won) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('room')
+      .upsert({
+        player_name: playerName,
+        room_code: roomCode,
+        marked: marked.size - 1,
+        total: 24,
+        won: !!won
+      }, { onConflict: 'room_code, player_name' }); // สมมติว่าสร้าง unique constraint ไว้
+
+    if (error) {
+       console.error("Failed to update progress to DB:", error);
+    }
+  } catch(err) {
+    console.error("DB Update Exception:", err);
+  }
+}
+
 
 function renderDeckCount(){
   const remaining = deck.length - roomDrawIndex;
@@ -823,29 +930,36 @@ function renderHistory(){
   });
 }
 
-/* ---------- shared question flow ---------- */
-function drawCard(){
+async function drawCard(){
   if(roomDrawIndex >= deck.length){ return; }
   if(roomDrawIndex > 0 && !revealed){
     hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
     hint.className = 'hint error';
     return;
   }
-  
-  roomDrawIndex += 1;
-  roomDrawnAt = Date.now();
-  current = deck[roomDrawIndex - 1];
-  revealed = false;
-  
-  questionText.className = 'question-text';
-  questionText.textContent = current.q;
-  answerReveal.classList.remove('show');
-  hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
-  hint.className = 'hint';
-  
   drawBtn.disabled = true;
-  revealBtn.disabled = false;
-  renderDeckCount();
+  const nextIndex = roomDrawIndex + 1;
+  await storageSet(`${KEY_PREFIX}:room:${roomCode}:draw`, {index: nextIndex, drawnAt: Date.now()});
+  await pollDrawState();
+}
+
+async function pollDrawState(){
+  const state = await storageGet(`${KEY_PREFIX}:room:${roomCode}:draw`);
+  if(!state) return;
+  if(state.index !== roomDrawIndex){
+    roomDrawIndex = state.index;
+    roomDrawnAt = state.drawnAt;
+    current = deck[roomDrawIndex - 1];
+    revealed = false;
+    questionText.className = 'question-text';
+    questionText.textContent = current.q;
+    answerReveal.classList.remove('show');
+    hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
+    hint.className = 'hint';
+    drawBtn.disabled = true;
+    revealBtn.disabled = false;
+    renderDeckCount();
+  }
 }
 
 function tick(){
@@ -879,7 +993,6 @@ function revealAnswerLocal(){
   renderHistory();
 }
 
-/* ---------- marking + win ---------- */
 function handleCellClick(idx){
   if(wonAlready) return;
   if(marked.has(idx)) return;
@@ -895,6 +1008,8 @@ function handleCellClick(idx){
     renderProgress();
     hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย`;
     hint.className = 'hint success';
+    syncProgress(false);
+    upsertPlayerToDB(false); // อัปเดตข้อมูลขึ้น Database
     checkWin();
   } else {
     const el = boardEl.children[idx];
@@ -903,6 +1018,13 @@ function handleCellClick(idx){
     hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
     hint.className = 'hint error';
   }
+}
+
+async function syncProgress(won){
+  if(!roomCode || !playerId) return;
+  await storageSet(`${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`, {
+    name: playerName, grade: playerGrade, marked: marked.size - 1, total: 24, won: !!won, updatedAt: Date.now()
+  });
 }
 
 function checkWin(){
@@ -917,12 +1039,106 @@ function checkWin(){
       wonAlready = true;
       renderBoard(line);
       setTimeout(() => overlay.classList.add('show'), 350);
+      syncProgress(true);
+      upsertPlayerToDB(true); // อัปเดตข้อมูลขึ้น Database
+      announceWin();
       return;
     }
   }
 }
 
-/* ---------- wiring ---------- */
+async function announceWin(){
+  const key = `${KEY_PREFIX}:room:${roomCode}:winners`;
+  const list = (await storageGet(key)) || [];
+  list.push({name: playerName, grade: playerGrade, at: Date.now()});
+  await storageSet(key, list);
+}
+
+// อัปเดตให้ไปดึงข้อมูลจากฐานข้อมูลมาแสดงด้วย
+async function pollPlayers(){
+  
+  // 1. ดึงจาก Local Storage (ตัวเดิม)
+  const localPlayers = await storageListValues(`${KEY_PREFIX}:room:${roomCode}:progress:`);
+  
+  // 2. ดึงจาก Supabase
+  let dbPlayers = [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('room')
+      .select('*')
+      .eq('room_code', roomCode);
+      
+    if (!error && data) {
+      dbPlayers = data.map(p => ({
+        _key: p.player_name, // ใช้ชื่อเป็น key ชั่วคราว
+        name: p.player_name,
+        grade: '', // ฐานข้อมูลยังไม่ได้เก็บ grade
+        marked: p.marked || 0,
+        total: p.total || 24,
+        won: p.won || false
+      }));
+    }
+  } catch (err) {
+    console.warn("Could not fetch players from DB", err);
+  }
+
+  // นำข้อมูลสองแหล่งมารวมกัน (โดยยึด Local เป็นหลักถ้าชื่อซ้ำ)
+  const mergedMap = new Map();
+  dbPlayers.forEach(p => mergedMap.set(p.name, p));
+  localPlayers.forEach(p => mergedMap.set(p.name, p)); // Local จะทับ DB ถ้ามี
+  
+  const players = Array.from(mergedMap.values());
+  
+  players.sort((a,b) => b.marked - a.marked);
+  renderPlayers(players);
+
+  const winners = (await storageGet(`${KEY_PREFIX}:room:${roomCode}:winners`)) || [];
+  renderWinnerBanner(winners);
+}
+
+function renderPlayers(players){
+  roomPlayerCount.textContent = `${players.length}/${maxPlayers}`;
+  playersPanelCount.textContent = `${players.length} คน`;
+  if(players.length === 0){
+    playersList.innerHTML = '<div class="players-empty">ยังไม่มีผู้เล่นในห้องนี้</div>';
+    return;
+  }
+  const myKey = `${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`;
+  playersList.innerHTML = '';
+  players.forEach(p => {
+    const isMe = p._key === myKey;
+    const pct = Math.round((p.marked / (p.total || 24)) * 100);
+    const row = document.createElement('div');
+    row.className = 'player-row' + (isMe ? ' me' : '');
+    row.innerHTML = `
+      <div class="player-avatar">${initials(p.name)}</div>
+      <div class="player-info">
+        <div class="player-name-row">
+          ${p.name}${isMe ? ' (คุณ)' : ''}
+          <span class="grade-badge">${p.grade || '-'}</span>
+          ${p.won ? '🏆' : ''}
+        </div>
+        <div class="player-progress-track"><div class="player-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="player-count">${p.marked}/${p.total || 24}</div>
+    `;
+    playersList.appendChild(row);
+  });
+}
+
+function renderWinnerBanner(winners){
+  if(!winners || winners.length === 0){
+    winnerBanner.classList.remove('show');
+    return;
+  }
+  const first = winners[0];
+  const extra = winners.length - 1;
+  winnerBanner.textContent = extra > 0
+    ? `🏆 ${first.name} (${first.grade}) ได้บิงโกแล้ว! และอีก ${extra} คน`
+    : `🏆 ${first.name} (${first.grade}) ได้บิงโกแล้ว!`;
+  winnerBanner.classList.add('show');
+}
+
 drawBtn.addEventListener('click', drawCard);
 revealBtn.addEventListener('click', revealAnswerLocal);
 document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
