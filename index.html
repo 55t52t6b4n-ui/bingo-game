@@ -391,7 +391,7 @@
     </div>
 
     <div class="lobby-error" id="lobbyError"></div>
-    <button class="btn btn-secondary" id="joinBtn">เข้าสู่เกม</button>
+    <button class="btn btn-secondary" id="joinBtn" type="button">เข้าสู่เกม</button>
     <div class="lobby-hint">ผู้เล่นทุกคนในห้องเดียวกันจะได้รับคำถามชุดเดียวกันตามลำดับ และเห็นความคืบหน้าของกันและกันแบบเรียลไทม์</div>
   </div>
 </div>
@@ -675,11 +675,11 @@ function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function updateModeUI(){
   const mode = document.querySelector('input[name="roomMode"]:checked').value;
   const creating = mode === 'create';
-  modeOptionCreate.classList.toggle('active', creating);
-  modeOptionJoin.classList.toggle('active', !creating);
-  maxPlayersField.style.display = creating ? 'block' : 'none';
-  roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
-  roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
+  if(modeOptionCreate) modeOptionCreate.classList.toggle('active', creating);
+  if(modeOptionJoin) modeOptionJoin.classList.toggle('active', !creating);
+  if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
+  if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
+  if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
 }
 
 document.querySelectorAll('input[name="roomMode"]').forEach(r => {
@@ -689,6 +689,7 @@ updateModeUI();
 
 /* ---------- handle join / create room ---------- */
 async function handleJoin(){
+  if(!lobbyError || !playerNameInput || !gradeSelect || !joinBtn) return;
   lobbyError.textContent = '';
   const name = playerNameInput.value.trim();
   const grade = gradeSelect.value;
@@ -700,77 +701,82 @@ async function handleJoin(){
   joinBtn.disabled = true;
   joinBtn.textContent = 'กำลังเชื่อมต่อ...';
 
-  if(mode === 'create'){
-    let code = roomCodeInput.value.trim() || genRoomCode();
-    const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
+  try {
+    if(mode === 'create'){
+      let code = roomCodeInput.value.trim() || genRoomCode();
+      const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
 
-    const { data, error } = await supabase
-      .from('room')
-      .insert([
+      const { error } = await supabase
+        .from('room')
+        .insert([
+          { 
+            player_name: name, 
+            room_code: code,
+            total_player: max
+          }
+        ]);
+
+      if (error) {
+        console.error("Supabase Error:", error);
+        lobbyError.textContent = 'สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+        joinBtn.disabled = false; 
+        joinBtn.textContent = 'เข้าสู่เกม';
+        return;
+      }
+
+      roomCode = code;
+      maxPlayers = max;
+    } else {
+      const code = roomCodeInput.value.trim();
+      if(!code){
+        lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
+        joinBtn.disabled = false; 
+        joinBtn.textContent = 'เข้าสู่เกม';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('room')
+        .select('*')
+        .eq('room_code', code);
+
+      if (error || !data || data.length === 0) {
+        lobbyError.textContent = 'ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง';
+        joinBtn.disabled = false; 
+        joinBtn.textContent = 'เข้าสู่เกม';
+        return;
+      }
+
+      roomCode = code;
+      maxPlayers = data[0].total_player || 4;
+
+      await supabase.from('room').insert([
         { 
           player_name: name, 
           room_code: code,
-          total_player: max
+          total_player: maxPlayers
         }
       ]);
-
-    if (error) {
-      console.error("Supabase Error:", error);
-      lobbyError.textContent = 'สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
-      joinBtn.disabled = false; 
-      joinBtn.textContent = 'เข้าสู่เกม';
-      return;
     }
 
-    roomCode = code;
-    maxPlayers = max;
-  } else {
-    // เข้าร่วมห้องเดิม
-    const code = roomCodeInput.value.trim();
-    if(!code){
-      lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
-      joinBtn.disabled = false; 
-      joinBtn.textContent = 'เข้าสู่เกม';
-      return;
-    }
+    playerId = genPlayerId();
+    playerName = name;
+    playerGrade = grade;
 
-    // ตรวจสอบว่ามีห้องนี้อยู่ใน Supabase หรือไม่
-    const { data, error } = await supabase
-      .from('room')
-      .select('*')
-      .eq('room_code', code);
-
-    if (error || !data || data.length === 0) {
-      lobbyError.textContent = 'ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง';
-      joinBtn.disabled = false; 
-      joinBtn.textContent = 'เข้าสู่เกม';
-      return;
-    }
-
-    roomCode = code;
-    maxPlayers = data[0].total_player || 4;
-
-    // บันทึกชื่อผู้เข้าร่วมใหม่ลงตาราง
-    await supabase.from('room').insert([
-      { 
-        player_name: name, 
-        room_code: code,
-        total_player: maxPlayers
-      }
-    ]);
+    if(lobbyOverlay) lobbyOverlay.style.display = 'none';
+    if(roomCodeDisplay) roomCodeDisplay.textContent = roomCode;
+    initRoomSession();
+  } catch (err) {
+    console.error("Connection exception:", err);
+    lobbyError.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย';
+    joinBtn.disabled = false;
+    joinBtn.textContent = 'เข้าสู่เกม';
   }
-
-  playerId = genPlayerId();
-  playerName = name;
-  playerGrade = grade;
-
-  // ซ่อนหน้า Lobby เข้าสู่เกม
-  lobbyOverlay.style.display = 'none';
-  roomCodeDisplay.textContent = roomCode;
-  initRoomSession();
 }
 
-joinBtn.addEventListener('click', handleJoin);
+if(joinBtn){
+  joinBtn.addEventListener('click', handleJoin);
+}
 
 /* ---------- room session ---------- */
 function initRoomSession(){
@@ -781,12 +787,16 @@ function initRoomSession(){
   revealed = false;
   history = [];
 
-  questionText.className = 'placeholder-text';
-  questionText.textContent = 'เริ่มจับการ์ดคำถามเพื่อเริ่มเกม';
-  answerReveal.classList.remove('show');
-  drawBtn.disabled = false;
-  drawBtn.textContent = 'จับการ์ดคำถาม';
-  revealBtn.disabled = true;
+  if(questionText){
+    questionText.className = 'placeholder-text';
+    questionText.textContent = 'เริ่มจับการ์ดคำถามเพื่อเริ่มเกม';
+  }
+  if(answerReveal) answerReveal.classList.remove('show');
+  if(drawBtn){
+    drawBtn.disabled = false;
+    drawBtn.textContent = 'จับการ์ดคำถาม';
+  }
+  if(revealBtn) revealBtn.disabled = true;
   renderHistory();
   renderDeckCount();
 
@@ -806,23 +816,28 @@ function resetMyBoard(){
   }
   marked = new Set([FREE_INDEX]);
   wonAlready = false;
-  overlay.classList.remove('show');
+  if(overlay) overlay.classList.remove('show');
   renderBoard();
   renderProgress();
 }
 
 function renderDeckCount(){
-  const remaining = deck.length - roomDrawIndex;
-  deckCount.textContent = `เหลือ ${remaining} ใบ`;
+  if(deckCount){
+    const remaining = deck.length - roomDrawIndex;
+    deckCount.textContent = `เหลือ ${remaining} ใบ`;
+  }
 }
 
 function renderProgress(){
-  const count = marked.size - 1;
-  progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
-  progressFill.style.width = `${(count/24)*100}%`;
+  if(progressLabel && progressFill){
+    const count = marked.size - 1;
+    progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
+    progressFill.style.width = `${(count/24)*100}%`;
+  }
 }
 
 function renderBoard(winCells){
+  if(!boardEl) return;
   boardEl.innerHTML = '';
   board.forEach((cell, idx) => {
     const div = document.createElement('div');
@@ -837,6 +852,7 @@ function renderBoard(winCells){
 }
 
 function renderHistory(){
+  if(!historyList) return;
   historyList.innerHTML = '';
   history.slice().reverse().forEach((h, i) => {
     const div = document.createElement('div');
@@ -849,8 +865,10 @@ function renderHistory(){
 function drawCard(){
   if(roomDrawIndex >= deck.length){ return; }
   if(roomDrawIndex > 0 && !revealed){
-    hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
-    hint.className = 'hint error';
+    if(hint){
+      hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
+      hint.className = 'hint error';
+    }
     return;
   }
   
@@ -859,14 +877,18 @@ function drawCard(){
   current = deck[roomDrawIndex - 1];
   revealed = false;
   
-  questionText.className = 'question-text';
-  questionText.textContent = current.q;
-  answerReveal.classList.remove('show');
-  hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
-  hint.className = 'hint';
+  if(questionText){
+    questionText.className = 'question-text';
+    questionText.textContent = current.q;
+  }
+  if(answerReveal) answerReveal.classList.remove('show');
+  if(hint){
+    hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
+    hint.className = 'hint';
+  }
   
-  drawBtn.disabled = true;
-  revealBtn.disabled = false;
+  if(drawBtn) drawBtn.disabled = true;
+  if(revealBtn) revealBtn.disabled = false;
   renderDeckCount();
 }
 
@@ -874,28 +896,34 @@ function tick(){
   if(!current || revealed) return;
   const elapsed = Date.now() - roomDrawnAt;
   const remaining = Math.max(10 - Math.floor(elapsed/1000), 0);
-  timerRing.classList.remove('hidden');
-  timerRing.setAttribute('data-t', remaining);
-  timerRing.style.setProperty('--pct', (remaining/10)*100);
+  if(timerRing){
+    timerRing.classList.remove('hidden');
+    timerRing.setAttribute('data-t', remaining);
+    timerRing.style.setProperty('--pct', (remaining/10)*100);
+  }
   if(remaining <= 0){ revealAnswerLocal(); }
 }
 
 function revealAnswerLocal(){
   if(!current || revealed) return;
   revealed = true;
-  timerRing.classList.add('hidden');
-  answerText.textContent = current.a;
-  answerReveal.classList.add('show');
-  revealBtn.disabled = true;
-  drawBtn.disabled = roomDrawIndex >= deck.length;
-  drawBtn.textContent = roomDrawIndex >= deck.length ? 'จับการ์ดครบแล้ว' : 'จับการ์ดใบถัดไป';
+  if(timerRing) timerRing.classList.add('hidden');
+  if(answerText) answerText.textContent = current.a;
+  if(answerReveal) answerReveal.classList.add('show');
+  if(revealBtn) revealBtn.disabled = true;
+  if(drawBtn){
+    drawBtn.disabled = roomDrawIndex >= deck.length;
+    drawBtn.textContent = roomDrawIndex >= deck.length ? 'จับการ์ดครบแล้ว' : 'จับการ์ดใบถัดไป';
+  }
   const targetIdx = board.findIndex(c => c.t === current.cell);
-  if(targetIdx !== -1 && marked.has(targetIdx)){
-    hint.textContent = 'ช่องคำตอบนี้ถูกปิดไปแล้วก่อนหน้า จับใบถัดไปได้เลย';
-    hint.className = 'hint';
-  } else {
-    hint.textContent = 'แตะช่องบนกระดานที่ตรงกับคำตอบ';
-    hint.className = 'hint';
+  if(hint){
+    if(targetIdx !== -1 && marked.has(targetIdx)){
+      hint.textContent = 'ช่องคำตอบนี้ถูกปิดไปแล้วก่อนหน้า จับใบถัดไปได้เลย';
+      hint.className = 'hint';
+    } else {
+      hint.textContent = 'แตะช่องบนกระดานที่ตรงกับคำตอบ';
+      hint.className = 'hint';
+    }
   }
   history.push({q: current.q, a: current.a});
   renderHistory();
@@ -905,8 +933,10 @@ function handleCellClick(idx){
   if(wonAlready) return;
   if(marked.has(idx)) return;
   if(!current || !revealed){
-    hint.textContent = 'จับการ์ดคำถามและรอดูเฉลยก่อนนะ';
-    hint.className = 'hint error';
+    if(hint){
+      hint.textContent = 'จับการ์ดคำถามและรอดูเฉลยก่อนนะ';
+      hint.className = 'hint error';
+    }
     return;
   }
   const cell = board[idx];
@@ -914,15 +944,21 @@ function handleCellClick(idx){
     marked.add(idx);
     renderBoard();
     renderProgress();
-    hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย`;
-    hint.className = 'hint success';
+    if(hint){
+      hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย`;
+      hint.className = 'hint success';
+    }
     checkWin();
   } else {
-    const el = boardEl.children[idx];
-    el.classList.add('shake');
-    setTimeout(() => el.classList.remove('shake'), 350);
-    hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
-    hint.className = 'hint error';
+    if(boardEl && boardEl.children[idx]){
+      const el = boardEl.children[idx];
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 350);
+    }
+    if(hint){
+      hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
+      hint.className = 'hint error';
+    }
   }
 }
 
@@ -937,19 +973,25 @@ function checkWin(){
     if(line.every(i => marked.has(i))){
       wonAlready = true;
       renderBoard(line);
-      setTimeout(() => overlay.classList.add('show'), 350);
+      setTimeout(() => {
+        if(overlay) overlay.classList.add('show');
+      }, 350);
       return;
     }
   }
 }
 
 /* ---------- wiring ---------- */
-drawBtn.addEventListener('click', drawCard);
-revealBtn.addEventListener('click', revealAnswerLocal);
-document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
-document.getElementById('playAgainBtn').addEventListener('click', () => { overlay.classList.remove('show'); resetMyBoard(); });
-document.getElementById('rulesToggle').addEventListener('click', () => {
-  document.getElementById('rulesPanel').classList.toggle('open');
+if(drawBtn) drawBtn.addEventListener('click', drawCard);
+if(revealBtn) revealBtn.addEventListener('click', revealAnswerLocal);
+const newGameBtn = document.getElementById('newGameBtn');
+if(newGameBtn) newGameBtn.addEventListener('click', resetMyBoard);
+const playAgainBtn = document.getElementById('playAgainBtn');
+if(playAgainBtn) playAgainBtn.addEventListener('click', () => { if(overlay) overlay.classList.remove('show'); resetMyBoard(); });
+const rulesToggle = document.getElementById('rulesToggle');
+if(rulesToggle) rulesToggle.addEventListener('click', () => {
+  const rulesPanel = document.getElementById('rulesPanel');
+  if(rulesPanel) rulesPanel.classList.toggle('open');
 });
 </script>
 </body>
