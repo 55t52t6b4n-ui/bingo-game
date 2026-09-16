@@ -274,7 +274,6 @@
   .lobby-card .lobby-sub{
     text-align:center; color:var(--ink-soft); font-size:13.5px; margin-bottom:20px;
   }
-  
   .field{margin-bottom:16px;}
   .field label{
     display:block; font-family:'Mitr'; font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500;
@@ -284,6 +283,7 @@
     font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper);
   }
   .field input:focus, .field select:focus{outline:2px solid var(--good); border-color:var(--good);}
+  
   .mode-toggle{display:flex; gap:10px; margin-bottom:16px;}
   .mode-option{
     flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center;
@@ -391,7 +391,6 @@
 </div>
 
 <div class="wrap">
-
   <div class="hero">
     <div class="hero-inner">
       <div class="eyebrow-star">⭐</div>
@@ -435,27 +434,21 @@
   </div>
 
   <div class="grid-layout">
-
     <div class="panel">
       <div class="panel-title">
         <span>การ์ดคำถาม</span>
         <span id="deckCount">เหลือ 24 ใบ</span>
       </div>
-
       <div class="question-box">
         <div class="timer-ring hidden" id="timerRing" data-t="10" style="--pct:100"></div>
         <div id="questionText" class="placeholder-text">กดปุ่มด้านล่างเพื่อเริ่มจับการ์ดคำถามใบแรก</div>
       </div>
-
       <div class="answer-reveal" id="answerReveal">คำตอบคือ <b id="answerText"></b> — แตะช่องที่ตรงกันบนกระดาน</div>
-
       <div class="deck-actions">
         <button class="btn btn-secondary" id="drawBtn">จับการ์ดคำถาม</button>
         <button class="btn btn-outline" id="revealBtn" disabled>ดูเฉลย</button>
       </div>
-
       <div class="hint" id="hint"></div>
-
       <div class="history">
         <div class="history-title">ประวัติการ์ดที่ผ่านมา</div>
         <div class="history-list" id="historyList"></div>
@@ -468,7 +461,6 @@
         <div class="board" id="board"></div>
       </div>
     </div>
-
   </div>
 
   <div class="panel players-panel">
@@ -494,6 +486,7 @@
 </div>
 
 <script>
+// 1. ตั้งค่า Supabase ให้อยู่บนสุด
 const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -596,7 +589,6 @@ let playerName = '';
 let playerGrade = '';
 let maxPlayers = 0;
 
-// shared draw state
 let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 
@@ -604,7 +596,6 @@ let tickHandle = null;
 let pollDrawHandle = null;
 let pollPlayersHandle = null;
 
-// DOM Elements
 const boardEl = document.getElementById('board');
 const questionText = document.getElementById('questionText');
 const answerReveal = document.getElementById('answerReveal');
@@ -672,6 +663,22 @@ function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
+// แก้ปัญหา window.storage error บน GitHub Pages
+if (typeof window.storage === 'undefined') {
+  window.storage = {
+    get: async function(key) { const val = localStorage.getItem(key); return val ? { value: val } : null; },
+    set: async function(key, val) { localStorage.setItem(key, val); return true; },
+    list: async function(prefix) {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k.startsWith(prefix)) keys.push(k);
+      }
+      return { keys: keys };
+    }
+  };
+}
+
 async function storageGet(key){
   try{
     const res = await window.storage.get(key, true);
@@ -707,6 +714,7 @@ function updateModeUI(){
 document.querySelectorAll('input[name="roomMode"]').forEach(r => r.addEventListener('change', updateModeUI));
 updateModeUI();
 
+// รวมโค้ดเข้าสู่เกม + Supabase ไว้ด้วยกัน
 async function handleJoin(){
   lobbyError.textContent = '';
   const name = playerNameInput.value.trim();
@@ -721,18 +729,15 @@ async function handleJoin(){
 
   if(mode === 'create'){
     let code = roomCodeInput.value.trim() || genRoomCode();
-    
-    // ตรวจสอบใน Storage จำลองก่อน
     const existing = await storageGet(`${KEY_PREFIX}:room:${code}:meta`);
     if(existing){
       lobbyError.textContent = `รหัสห้อง ${code} มีคนใช้อยู่แล้ว ลองรหัสอื่น หรือเลือก "เข้าร่วมห้องเดิม" แทน`;
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
-    
     const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
     
-    // ส่งข้อมูลเข้าตาราง room ใน Supabase
+    // --- โค้ดส่งเข้า Supabase (ใหม่) ---
     try {
       const { data, error } = await supabaseClient
         .from('room')
@@ -748,15 +753,16 @@ async function handleJoin(){
         console.error("Supabase Error:", error);
         lobbyError.textContent = "สร้างห้องบนฐานข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
         joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-        return;
+        return; // หยุดการทำงานถ้าส่งข้อมูลไม่ผ่าน
       }
     } catch(err) {
-      console.warn("Supabase not fully setup or blocked, continuing with local storage fallback", err);
+      console.error("Exception:", err);
     }
-    
+    // ---------------------------------
+
     const ok = await storageSet(`${KEY_PREFIX}:room:${code}:meta`, {maxPlayers: max, createdAt: Date.now()});
     if(!ok){
-      lobbyError.textContent = 'สร้างห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      lobbyError.textContent = 'สร้างห้องไม่สำเร็จใน Local กรุณาลองใหม่อีกครั้ง';
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
@@ -791,7 +797,6 @@ async function handleJoin(){
   roomCodeDisplay.textContent = roomCode;
   initRoomSession();
 }
-joinBtn.addEventListener('click', handleJoin);
 
 function initRoomSession(){
   deck = seededShuffle(QUESTIONS, roomCode);
@@ -844,7 +849,7 @@ function renderDeckCount(){
 }
 
 function renderProgress(){
-  const count = marked.size - 1; // exclude FREE
+  const count = marked.size - 1; 
   progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
   progressFill.style.width = `${(count/24)*100}%`;
 }
@@ -1047,6 +1052,7 @@ function renderWinnerBanner(winners){
   winnerBanner.classList.add('show');
 }
 
+// ผูกปุ่มเข้ากับฟังก์ชัน
 drawBtn.addEventListener('click', drawCard);
 revealBtn.addEventListener('click', revealAnswerLocal);
 document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
@@ -1054,6 +1060,9 @@ document.getElementById('playAgainBtn').addEventListener('click', () => { overla
 document.getElementById('rulesToggle').addEventListener('click', () => {
   document.getElementById('rulesPanel').classList.toggle('open');
 });
+// ผูกปุ่มเข้าสู่เกม
+document.getElementById('joinBtn').addEventListener('click', handleJoin);
+
 </script>
 </body>
 </html>
