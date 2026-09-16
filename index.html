@@ -1039,5 +1039,16 @@ document.getElementById('rulesToggle').addEventListener('click', () => {
   document.getElementById('rulesPanel').classList.toggle('open');
 });
 </script>
+  !-- เรียกใช้เครื่องมือของ Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+ 
+  const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
+  
+  const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
+  
+  // สร้างการเชื่อมต่อ
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 </body>
 </html>
