@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- เรียกใช้เครื่องมือของ Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
   :root{
     --paper: #FAF6E6;
@@ -41,6 +40,7 @@
   }
   .wrap{max-width: 1040px; margin: 0 auto;}
 
+  /* ---- Hero chalkboard ---- */
   .hero{
     background: var(--wood);
     border-radius: 22px;
@@ -79,7 +79,6 @@
     margin: 0 0 22px;
     font-weight: 400;
   }
-  
   .btn{
     font-family:'Mitr', sans-serif;
     font-size: 16px;
@@ -104,6 +103,7 @@
     border: 1.5px dashed rgba(245,241,227,0.5);
   }
 
+  /* ---- status row ---- */
   .status{
     display:flex; align-items:center; justify-content:space-between;
     gap:16px; flex-wrap:wrap;
@@ -121,6 +121,7 @@
     padding:8px 16px; cursor:pointer;
   }
 
+  /* ---- rules panel ---- */
   .rules{
     background:#fff; border:1.5px solid var(--paper-line); border-radius:16px;
     padding:20px 22px; margin: 0 4px 22px; display:none;
@@ -131,6 +132,7 @@
   .rules ul{margin:6px 0 14px; padding-left:20px;}
   .rules ul:last-child{margin-bottom:0;}
 
+  /* ---- layout ---- */
   .grid-layout{
     display:grid; grid-template-columns: 1fr 1.15fr; gap:20px;
   }
@@ -138,6 +140,7 @@
     .grid-layout{grid-template-columns: 1fr;}
   }
 
+  /* ---- question deck panel ---- */
   .panel{
     background:#fff; border-radius:18px; padding:22px; box-shadow: var(--card-shadow);
     border: 1.5px solid var(--paper-line);
@@ -146,7 +149,6 @@
     font-family:'Mitr'; font-size:14px; color: var(--board-green);
     display:flex; justify-content:space-between; margin-bottom:14px;
   }
-  
   .question-box{
     background: var(--board-green);
     border-radius:14px; padding:26px 20px; min-height:120px;
@@ -170,7 +172,6 @@
     content: attr(data-t); position:relative;
   }
   .timer-ring.hidden{display:none;}
-  
   .answer-reveal{
     margin-top:14px; text-align:center; font-family:'Mitr'; font-size:15px;
     color: var(--good); display:none;
@@ -197,6 +198,7 @@
   }
   .history-item .num{color:var(--board-green); font-weight:600; font-family:'Mitr'; flex-shrink:0;}
 
+  /* ---- board panel ---- */
   .board-panel{background: var(--wood); border-radius:18px; padding:12px; box-shadow: var(--card-shadow);}
   .board-inner{background:#fff; border-radius:12px; padding:16px;}
   .board-header{
@@ -238,6 +240,7 @@
   }
   .cell.win-line{outline: 3px solid var(--yellow); outline-offset:-2px;}
 
+  /* ---- win overlay ---- */
   .overlay{
     position:fixed; inset:0; background:rgba(34,51,43,0.72);
     display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
@@ -255,6 +258,7 @@
     text-align:center; margin-top:34px; color: var(--ink-soft); font-size:12.5px;
   }
 
+  /* ---- lobby / join screen ---- */
   .lobby-overlay{
     position:fixed; inset:0; z-index:100; overflow-y:auto;
     background-color: var(--paper);
@@ -283,7 +287,6 @@
     font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper);
   }
   .field input:focus, .field select:focus{outline:2px solid var(--good); border-color:var(--good);}
-  
   .mode-toggle{display:flex; gap:10px; margin-bottom:16px;}
   .mode-option{
     flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center;
@@ -297,6 +300,7 @@
   .lobby-card .btn{width:100%;}
   .lobby-hint{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.6;}
 
+  /* ---- room info bar ---- */
   .room-bar{
     display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
     margin: 16px 4px 0; font-family:'Mitr'; font-size:13px; color:var(--board-green);
@@ -307,6 +311,7 @@
   }
   .room-pill b{color:var(--board-green-dark); letter-spacing:1px;}
 
+  /* ---- players panel ---- */
   .players-panel{margin-top:22px;}
   .players-list{display:flex; flex-direction:column; gap:8px;}
   .player-row{
@@ -330,6 +335,7 @@
   .player-count{font-size:12px; color:var(--ink-soft); flex-shrink:0; white-space:nowrap;}
   .players-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:14px;}
 
+  /* ---- room-wide winner banner ---- */
   .winner-banner{
     display:none; background: var(--yellow); border:1.5px solid var(--yellow-dark); border-radius:14px;
     padding:12px 16px; text-align:center; font-family:'Mitr'; font-size:14px; color:var(--board-green-dark);
@@ -391,6 +397,7 @@
 </div>
 
 <div class="wrap">
+
   <div class="hero">
     <div class="hero-inner">
       <div class="eyebrow-star">⭐</div>
@@ -434,21 +441,27 @@
   </div>
 
   <div class="grid-layout">
+
     <div class="panel">
       <div class="panel-title">
         <span>การ์ดคำถาม</span>
         <span id="deckCount">เหลือ 24 ใบ</span>
       </div>
+
       <div class="question-box">
         <div class="timer-ring hidden" id="timerRing" data-t="10" style="--pct:100"></div>
         <div id="questionText" class="placeholder-text">กดปุ่มด้านล่างเพื่อเริ่มจับการ์ดคำถามใบแรก</div>
       </div>
+
       <div class="answer-reveal" id="answerReveal">คำตอบคือ <b id="answerText"></b> — แตะช่องที่ตรงกันบนกระดาน</div>
+
       <div class="deck-actions">
         <button class="btn btn-secondary" id="drawBtn">จับการ์ดคำถาม</button>
         <button class="btn btn-outline" id="revealBtn" disabled>ดูเฉลย</button>
       </div>
+
       <div class="hint" id="hint"></div>
+
       <div class="history">
         <div class="history-title">ประวัติการ์ดที่ผ่านมา</div>
         <div class="history-list" id="historyList"></div>
@@ -461,6 +474,7 @@
         <div class="board" id="board"></div>
       </div>
     </div>
+
   </div>
 
   <div class="panel players-panel">
@@ -486,10 +500,10 @@
 </div>
 
 <script>
-// 1. ตั้งค่า Supabase ให้อยู่บนสุด
+// --- เชื่อมต่อ Supabase ---
 const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"},
@@ -589,12 +603,11 @@ let playerName = '';
 let playerGrade = '';
 let maxPlayers = 0;
 
+// shared draw state
 let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 
 let tickHandle = null;
-let pollDrawHandle = null;
-let pollPlayersHandle = null;
 
 const boardEl = document.getElementById('board');
 const questionText = document.getElementById('questionText');
@@ -628,6 +641,7 @@ const playersList = document.getElementById('playersList');
 const playersPanelCount = document.getElementById('playersPanelCount');
 const winnerBanner = document.getElementById('winnerBanner');
 
+/* ---------- random helpers ---------- */
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -663,45 +677,7 @@ function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
-// แก้ปัญหา window.storage error บน GitHub Pages
-if (typeof window.storage === 'undefined') {
-  window.storage = {
-    get: async function(key) { const val = localStorage.getItem(key); return val ? { value: val } : null; },
-    set: async function(key, val) { localStorage.setItem(key, val); return true; },
-    list: async function(prefix) {
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k.startsWith(prefix)) keys.push(k);
-      }
-      return { keys: keys };
-    }
-  };
-}
-
-async function storageGet(key){
-  try{
-    const res = await window.storage.get(key, true);
-    return res ? JSON.parse(res.value) : null;
-  }catch(e){ return null; }
-}
-async function storageSet(key, value){
-  try{ return await window.storage.set(key, JSON.stringify(value), true); }
-  catch(e){ console.error('storage set failed', key, e); return null; }
-}
-async function storageListValues(prefix){
-  const out = [];
-  try{
-    const res = await window.storage.list(prefix, true);
-    const keys = (res && res.keys) || [];
-    for(const k of keys){
-      const v = await storageGet(k);
-      if(v) out.push(Object.assign({_key:k}, v));
-    }
-  }catch(e){ /* no keys yet */ }
-  return out;
-}
-
+/* ---------- lobby ---------- */
 function updateModeUI(){
   const mode = document.querySelector('input[name="roomMode"]:checked').value;
   const creating = mode === 'create';
@@ -714,7 +690,6 @@ function updateModeUI(){
 document.querySelectorAll('input[name="roomMode"]').forEach(r => r.addEventListener('change', updateModeUI));
 updateModeUI();
 
-// รวมโค้ดเข้าสู่เกม + Supabase ไว้ด้วยกัน
 async function handleJoin(){
   lobbyError.textContent = '';
   const name = playerNameInput.value.trim();
@@ -727,77 +702,54 @@ async function handleJoin(){
   joinBtn.disabled = true;
   joinBtn.textContent = 'กำลังเชื่อมต่อ...';
 
+  // --- ระบบส่งข้อมูลเข้า Supabase ---
   if(mode === 'create'){
     let code = roomCodeInput.value.trim() || genRoomCode();
-    const existing = await storageGet(`${KEY_PREFIX}:room:${code}:meta`);
-    if(existing){
-      lobbyError.textContent = `รหัสห้อง ${code} มีคนใช้อยู่แล้ว ลองรหัสอื่น หรือเลือก "เข้าร่วมห้องเดิม" แทน`;
-      joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-      return;
-    }
     const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
-    
-    // --- โค้ดส่งเข้า Supabase (ใหม่) ---
-    try {
-      const { data, error } = await supabaseClient
-        .from('room')
-        .insert([
-          { 
-            player_name: name, 
-            room_code: code,
-            total_player: max
-          }
-        ]);
 
-      if (error) {
-        console.error("Supabase Error:", error);
-        lobbyError.textContent = "สร้างห้องบนฐานข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
-        joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-        return; // หยุดการทำงานถ้าส่งข้อมูลไม่ผ่าน
-      }
-    } catch(err) {
-      console.error("Exception:", err);
-    }
-    // ---------------------------------
+    const { data, error } = await supabase
+      .from('room')
+      .insert([
+        { 
+          player_name: name, 
+          room_code: code,
+          total_player: max
+        }
+      ]);
 
-    const ok = await storageSet(`${KEY_PREFIX}:room:${code}:meta`, {maxPlayers: max, createdAt: Date.now()});
-    if(!ok){
-      lobbyError.textContent = 'สร้างห้องไม่สำเร็จใน Local กรุณาลองใหม่อีกครั้ง';
+    if (error) {
+      console.error("Supabase Error:", error);
+      lobbyError.textContent = 'สร้างห้องไม่สำเร็จ (ฐานข้อมูลมีปัญหา) กรุณาลองใหม่อีกครั้ง';
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
+
     roomCode = code;
     maxPlayers = max;
   } else {
+    // เข้าร่วมห้องเดิม
     const code = roomCodeInput.value.trim();
     if(!code){
       lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
       joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
       return;
     }
-    const meta = await storageGet(`${KEY_PREFIX}:room:${code}:meta`);
-    if(!meta){
-      lobbyError.textContent = 'ไม่พบห้องนี้ กรุณาตรวจสอบรหัสห้องอีกครั้ง';
-      joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-      return;
-    }
     roomCode = code;
-    maxPlayers = meta.maxPlayers;
+    maxPlayers = 4;
   }
 
   playerId = genPlayerId();
   playerName = name;
   playerGrade = grade;
 
-  await storageSet(`${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`, {
-    name: playerName, grade: playerGrade, marked: 0, total: 24, won: false, updatedAt: Date.now()
-  });
-
+  // พาเข้าสู่กระดานเกม
   lobbyOverlay.style.display = 'none';
   roomCodeDisplay.textContent = roomCode;
   initRoomSession();
 }
+joinBtn.addEventListener('click', handleJoin);
 
+/* ---------- room session ---------- */
 function initRoomSession(){
   deck = seededShuffle(QUESTIONS, roomCode);
   roomDrawIndex = 0;
@@ -807,7 +759,7 @@ function initRoomSession(){
   history = [];
 
   questionText.className = 'placeholder-text';
-  questionText.textContent = 'รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม';
+  questionText.textContent = 'เริ่มจับการ์ดคำถามเพื่อเริ่มเกม';
   answerReveal.classList.remove('show');
   drawBtn.disabled = false;
   drawBtn.textContent = 'จับการ์ดคำถาม';
@@ -817,14 +769,8 @@ function initRoomSession(){
 
   resetMyBoard();
 
-  pollDrawState();
-  pollPlayers();
   tickHandle && clearInterval(tickHandle);
-  pollDrawHandle && clearInterval(pollDrawHandle);
-  pollPlayersHandle && clearInterval(pollPlayersHandle);
   tickHandle = setInterval(tick, 500);
-  pollDrawHandle = setInterval(pollDrawState, 1500);
-  pollPlayersHandle = setInterval(pollPlayers, 2000);
 }
 
 function resetMyBoard(){
@@ -840,7 +786,6 @@ function resetMyBoard(){
   overlay.classList.remove('show');
   renderBoard();
   renderProgress();
-  syncProgress(false);
 }
 
 function renderDeckCount(){
@@ -849,7 +794,7 @@ function renderDeckCount(){
 }
 
 function renderProgress(){
-  const count = marked.size - 1; 
+  const count = marked.size - 1; // exclude FREE
   progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
   progressFill.style.width = `${(count/24)*100}%`;
 }
@@ -878,36 +823,29 @@ function renderHistory(){
   });
 }
 
-async function drawCard(){
+/* ---------- shared question flow ---------- */
+function drawCard(){
   if(roomDrawIndex >= deck.length){ return; }
   if(roomDrawIndex > 0 && !revealed){
     hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
     hint.className = 'hint error';
     return;
   }
+  
+  roomDrawIndex += 1;
+  roomDrawnAt = Date.now();
+  current = deck[roomDrawIndex - 1];
+  revealed = false;
+  
+  questionText.className = 'question-text';
+  questionText.textContent = current.q;
+  answerReveal.classList.remove('show');
+  hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
+  hint.className = 'hint';
+  
   drawBtn.disabled = true;
-  const nextIndex = roomDrawIndex + 1;
-  await storageSet(`${KEY_PREFIX}:room:${roomCode}:draw`, {index: nextIndex, drawnAt: Date.now()});
-  await pollDrawState();
-}
-
-async function pollDrawState(){
-  const state = await storageGet(`${KEY_PREFIX}:room:${roomCode}:draw`);
-  if(!state) return;
-  if(state.index !== roomDrawIndex){
-    roomDrawIndex = state.index;
-    roomDrawnAt = state.drawnAt;
-    current = deck[roomDrawIndex - 1];
-    revealed = false;
-    questionText.className = 'question-text';
-    questionText.textContent = current.q;
-    answerReveal.classList.remove('show');
-    hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
-    hint.className = 'hint';
-    drawBtn.disabled = true;
-    revealBtn.disabled = false;
-    renderDeckCount();
-  }
+  revealBtn.disabled = false;
+  renderDeckCount();
 }
 
 function tick(){
@@ -941,6 +879,7 @@ function revealAnswerLocal(){
   renderHistory();
 }
 
+/* ---------- marking + win ---------- */
 function handleCellClick(idx){
   if(wonAlready) return;
   if(marked.has(idx)) return;
@@ -956,7 +895,6 @@ function handleCellClick(idx){
     renderProgress();
     hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย`;
     hint.className = 'hint success';
-    syncProgress(false);
     checkWin();
   } else {
     const el = boardEl.children[idx];
@@ -965,13 +903,6 @@ function handleCellClick(idx){
     hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
     hint.className = 'hint error';
   }
-}
-
-async function syncProgress(won){
-  if(!roomCode || !playerId) return;
-  await storageSet(`${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`, {
-    name: playerName, grade: playerGrade, marked: marked.size - 1, total: 24, won: !!won, updatedAt: Date.now()
-  });
 }
 
 function checkWin(){
@@ -986,73 +917,12 @@ function checkWin(){
       wonAlready = true;
       renderBoard(line);
       setTimeout(() => overlay.classList.add('show'), 350);
-      syncProgress(true);
-      announceWin();
       return;
     }
   }
 }
 
-async function announceWin(){
-  const key = `${KEY_PREFIX}:room:${roomCode}:winners`;
-  const list = (await storageGet(key)) || [];
-  list.push({name: playerName, grade: playerGrade, at: Date.now()});
-  await storageSet(key, list);
-}
-
-async function pollPlayers(){
-  const players = await storageListValues(`${KEY_PREFIX}:room:${roomCode}:progress:`);
-  players.sort((a,b) => b.marked - a.marked);
-  renderPlayers(players);
-
-  const winners = (await storageGet(`${KEY_PREFIX}:room:${roomCode}:winners`)) || [];
-  renderWinnerBanner(winners);
-}
-
-function renderPlayers(players){
-  roomPlayerCount.textContent = `${players.length}/${maxPlayers}`;
-  playersPanelCount.textContent = `${players.length} คน`;
-  if(players.length === 0){
-    playersList.innerHTML = '<div class="players-empty">ยังไม่มีผู้เล่นในห้องนี้</div>';
-    return;
-  }
-  const myKey = `${KEY_PREFIX}:room:${roomCode}:progress:${playerId}`;
-  playersList.innerHTML = '';
-  players.forEach(p => {
-    const isMe = p._key === myKey;
-    const pct = Math.round((p.marked / (p.total || 24)) * 100);
-    const row = document.createElement('div');
-    row.className = 'player-row' + (isMe ? ' me' : '');
-    row.innerHTML = `
-      <div class="player-avatar">${initials(p.name)}</div>
-      <div class="player-info">
-        <div class="player-name-row">
-          ${p.name}${isMe ? ' (คุณ)' : ''}
-          <span class="grade-badge">${p.grade || '-'}</span>
-          ${p.won ? '🏆' : ''}
-        </div>
-        <div class="player-progress-track"><div class="player-progress-fill" style="width:${pct}%"></div></div>
-      </div>
-      <div class="player-count">${p.marked}/${p.total || 24}</div>
-    `;
-    playersList.appendChild(row);
-  });
-}
-
-function renderWinnerBanner(winners){
-  if(!winners || winners.length === 0){
-    winnerBanner.classList.remove('show');
-    return;
-  }
-  const first = winners[0];
-  const extra = winners.length - 1;
-  winnerBanner.textContent = extra > 0
-    ? `🏆 ${first.name} (${first.grade}) ได้บิงโกแล้ว! และอีก ${extra} คน`
-    : `🏆 ${first.name} (${first.grade}) ได้บิงโกแล้ว!`;
-  winnerBanner.classList.add('show');
-}
-
-// ผูกปุ่มเข้ากับฟังก์ชัน
+/* ---------- wiring ---------- */
 drawBtn.addEventListener('click', drawCard);
 revealBtn.addEventListener('click', revealAnswerLocal);
 document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
@@ -1060,9 +930,6 @@ document.getElementById('playAgainBtn').addEventListener('click', () => { overla
 document.getElementById('rulesToggle').addEventListener('click', () => {
   document.getElementById('rulesPanel').classList.toggle('open');
 });
-// ผูกปุ่มเข้าสู่เกม
-document.getElementById('joinBtn').addEventListener('click', handleJoin);
-
 </script>
 </body>
 </html>
