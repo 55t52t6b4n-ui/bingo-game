@@ -6,8 +6,6 @@
 <title>BINGO ห่างไกลโรค</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- เรียกใช้เครื่องมือของ Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
   :root{
@@ -144,10 +142,12 @@
   .field label{ display:block; font-family:'Mitr'; font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500; }
   .field input[type="text"], .field input[type="number"], .field select{ width:100%; padding:11px 12px; border-radius:10px; border:1.5px solid var(--paper-line); font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper); }
   .field input:focus, .field select:focus{outline:2px solid var(--good); border-color:var(--good);}
+  
   .mode-toggle{display:flex; gap:10px; margin-bottom:16px;}
   .mode-option{ flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center; cursor:pointer; font-family:'Mitr'; font-size:13.5px; color:var(--ink-soft); transition: all 0.2s; }
-  .mode-option input{margin-right:6px;}
+  .mode-option input{margin-right:6px; cursor:pointer;}
   .mode-option.active{border-color:var(--good); background:#EFF7F1; color:var(--board-green); font-weight:600;}
+  
   .lobby-error{ color:var(--coral); font-size:13px; text-align:center; margin: 4px 0 12px; min-height:16px; font-weight:600; }
   .lobby-card .btn{width:100%;}
   .lobby-hint{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.6;}
@@ -175,8 +175,43 @@
   .winner-banner{ display:none; background: var(--yellow); border:1.5px solid var(--yellow-dark); border-radius:14px; padding:12px 16px; text-align:center; font-family:'Mitr'; font-size:14px; color:var(--board-green-dark); margin: 18px 4px 0; font-weight:600; }
   .winner-banner.show{display:block;}
 </style>
+
+<script>
+  // -------------------------------------------------------------
+  // ระบบ UI อิสระ - ทำงานได้ทันที 100% แม้โหลด Supabase ไม่สำเร็จ
+  // แก้ปัญหาปุ่มค้าง กรอบเขียวไม่ขยับแบบเด็ดขาด!
+  // -------------------------------------------------------------
+  function updateModeUI() {
+    try {
+      var radios = document.getElementsByName('roomMode');
+      var mode = 'create';
+      for(var i=0; i<radios.length; i++) {
+        if(radios[i].checked) mode = radios[i].value;
+      }
+      
+      var creating = (mode === 'create');
+      
+      var optCreate = document.getElementById('modeOptionCreate');
+      var optJoin = document.getElementById('modeOptionJoin');
+      
+      if(optCreate) optCreate.className = creating ? 'mode-option active' : 'mode-option';
+      if(optJoin) optJoin.className = !creating ? 'mode-option active' : 'mode-option';
+      
+      var maxField = document.getElementById('maxPlayersField');
+      if(maxField) maxField.style.display = creating ? 'block' : 'none';
+      
+      var codeLabel = document.getElementById('roomCodeLabel');
+      if(codeLabel) codeLabel.innerText = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
+      
+      var codeInput = document.getElementById('roomCodeInput');
+      if(codeInput) codeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
+    } catch(e) {
+      console.error("UI Switch Error:", e);
+    }
+  }
+</script>
 </head>
-<body>
+<body onload="updateModeUI()">
 
 <div class="lobby-overlay" id="lobbyOverlay">
   <div class="lobby-card">
@@ -203,12 +238,13 @@
       </select>
     </div>
 
+    <!-- สังเกต onchange="updateModeUI()" นี่คือจุดที่แก้บั๊กปุ่มกดแล้วไม่ตอบสนอง -->
     <div class="mode-toggle">
       <label class="mode-option active" id="modeOptionCreate">
-        <input type="radio" name="roomMode" value="create" checked> สร้างห้องใหม่
+        <input type="radio" name="roomMode" value="create" checked onchange="updateModeUI()"> สร้างห้องใหม่
       </label>
       <label class="mode-option" id="modeOptionJoin">
-        <input type="radio" name="roomMode" value="join"> เข้าร่วมห้องเดิม
+        <input type="radio" name="roomMode" value="join" onchange="updateModeUI()"> เข้าร่วมห้องเดิม
       </label>
     </div>
 
@@ -323,85 +359,19 @@
   </div>
 </div>
 
-<script>
-// ==========================================
-// 1. ระบบควบคุมหน้าตาเว็บ (UI) แบบป้องกันการค้าง
-// ==========================================
-function updateModeUI(){
-  try {
-    var modeEl = document.querySelector('input[name="roomMode"]:checked');
-    if(!modeEl) return;
-    var mode = modeEl.value;
-    var creating = (mode === 'create');
-    
-    var modeOptionCreate = document.getElementById('modeOptionCreate');
-    var modeOptionJoin = document.getElementById('modeOptionJoin');
-    var maxPlayersField = document.getElementById('maxPlayersField');
-    var roomCodeLabel = document.getElementById('roomCodeLabel');
-    var roomCodeInput = document.getElementById('roomCodeInput');
-    
-    if(modeOptionCreate) {
-      if(creating) modeOptionCreate.classList.add('active');
-      else modeOptionCreate.classList.remove('active');
-    }
-    if(modeOptionJoin) {
-      if(!creating) modeOptionJoin.classList.add('active');
-      else modeOptionJoin.classList.remove('active');
-    }
-    
-    if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
-    if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
-    if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
-  } catch(e) {
-    console.error("UI Error:", e);
-  }
-}
+<!-- เปลี่ยนมาใช้ defer เพื่อไม่ให้ Supabase ขัดจังหวะการแสดงผลเว็บถาวร -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
-// ผูกปุ่มกดทันทีที่เปิดเว็บ (กันเว็บค้าง)
-var radios = document.querySelectorAll('input[name="roomMode"]');
-for(var i=0; i<radios.length; i++){
-  radios[i].addEventListener('change', updateModeUI);
-}
-updateModeUI();
-
+<script defer>
 // ==========================================
-// 2. เชื่อมต่อฐานข้อมูล Supabase แบบปลอดภัย
+// การตั้งค่า Supabase
 // ==========================================
 const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
 let supabase = null;
 
-try {
-  if (window.supabase) {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  } else {
-    console.warn("โหลด Supabase ไม่สำเร็จ เน็ตอาจจะบล็อก");
-  }
-} catch(e) {
-  console.error("Supabase Error:", e);
-}
-
-// DOM Elements สำหรับเกม
-const boardEl = document.getElementById('board');
-const questionText = document.getElementById('questionText');
-const answerReveal = document.getElementById('answerReveal');
-const answerText = document.getElementById('answerText');
-const drawBtn = document.getElementById('drawBtn');
-const revealBtn = document.getElementById('revealBtn');
-const deckCount = document.getElementById('deckCount');
-const hint = document.getElementById('hint');
-const historyList = document.getElementById('historyList');
-const progressFill = document.getElementById('progressFill');
-const progressLabel = document.getElementById('progressLabel');
-const timerRing = document.getElementById('timerRing');
-const overlay = document.getElementById('overlay');
-const lobbyOverlay = document.getElementById('lobbyOverlay');
-const lobbyError = document.getElementById('lobbyError');
-const joinBtn = document.getElementById('joinBtn');
-const roomCodeDisplay = document.getElementById('roomCodeDisplay');
-
 // ==========================================
-// 3. ข้อมูลคำถามและไอเทมในเกมบิงโก
+// ข้อมูลคำถามและไอเทมในเกมบิงโก
 // ==========================================
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"}, {t:"โรคเบาหวาน", i:"🩸"}, {t:"โรคความดันโลหิตสูง", i:"💢"},
@@ -487,6 +457,9 @@ let roomDrawnAt = 0;
 let tickHandle = null;
 let realtimeChannel = null;
 
+// ==========================================
+// ฟังก์ชันสุ่มและตัวช่วยต่างๆ
+// ==========================================
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -523,29 +496,34 @@ function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
 // ==========================================
-// 4. ฟังก์ชันเข้าสู่ห้อง (กดปุ่มเข้าสู่เกม)
+// ฟังก์ชันเข้าสู่ห้องเกม
 // ==========================================
 async function handleJoin(){
-  var nameInput = document.getElementById('playerNameInput');
-  var gradeSelect = document.getElementById('gradeSelect');
-  var maxInput = document.getElementById('maxPlayersInput');
-  var codeInput = document.getElementById('roomCodeInput');
-
+  const lobbyError = document.getElementById('lobbyError');
+  const joinBtn = document.getElementById('joinBtn');
   lobbyError.textContent = '';
-  const name = nameInput.value.trim();
-  const grade = gradeSelect.value;
   
-  var modeEl = document.querySelector('input[name="roomMode"]:checked');
-  if(!modeEl) return;
-  const mode = modeEl.value;
+  const name = document.getElementById('playerNameInput').value.trim();
+  const grade = document.getElementById('gradeSelect').value;
+  
+  let mode = 'create';
+  const radios = document.getElementsByName('roomMode');
+  for(let i=0; i<radios.length; i++) {
+    if(radios[i].checked) mode = radios[i].value;
+  }
 
   if(!name){ lobbyError.textContent = 'กรุณากรอกชื่อผู้เล่น'; return; }
   if(!grade){ lobbyError.textContent = 'กรุณาเลือกระดับชั้น'; return; }
-  
-  // ตรวจสอบว่าระบบโหลด Supabase สำเร็จหรือไม่
-  if(!supabase) {
-    lobbyError.textContent = 'ระบบฐานข้อมูลขัดข้อง (เน็ตอาจถูกบล็อก) กรุณาลองใหม่';
+
+  // ตรวจสอบก่อนว่าระบบ Supabase โหลดเสร็จหรือยัง
+  if (!window.supabase) {
+    lobbyError.textContent = 'ระบบฐานข้อมูลกำลังโหลด หรือถูกบล็อกโดยอินเทอร์เน็ต กรุณาลองใหม่ในอีกสักครู่';
     return;
+  }
+
+  // สร้าง Object การเชื่อมต่อใหม่ถ้ายังไม่มี
+  if (!supabase) {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
   }
 
   joinBtn.disabled = true;
@@ -553,8 +531,8 @@ async function handleJoin(){
 
   try {
     if(mode === 'create'){
-      let code = codeInput.value.trim() || genRoomCode();
-      const max = Math.max(1, Math.min(30, parseInt(maxInput.value, 10) || 4));
+      let code = document.getElementById('roomCodeInput').value.trim() || genRoomCode();
+      const max = Math.max(1, Math.min(30, parseInt(document.getElementById('maxPlayersInput').value, 10) || 4));
 
       const { error: roomErr } = await supabase
         .from('rooms')
@@ -567,7 +545,7 @@ async function handleJoin(){
       roomCode = code;
       maxPlayers = max;
     } else {
-      const code = codeInput.value.trim();
+      const code = document.getElementById('roomCodeInput').value.trim();
       if(!code){ throw new Error('กรุณากรอกรหัสห้อง'); }
 
       const { data, error } = await supabase
@@ -604,8 +582,8 @@ async function handleJoin(){
       throw progErr;
     }
 
-    lobbyOverlay.style.display = 'none';
-    roomCodeDisplay.textContent = roomCode;
+    document.getElementById('lobbyOverlay').style.display = 'none';
+    document.getElementById('roomCodeDisplay').textContent = roomCode;
     initRoomSession();
     
   } catch (err) {
@@ -615,10 +593,15 @@ async function handleJoin(){
     joinBtn.textContent = 'เข้าสู่เกม';
   }
 }
-if(joinBtn) joinBtn.addEventListener('click', handleJoin);
+
+// ผูก Event ปุ่มกดผ่าน JavaScript 
+setTimeout(() => {
+  const btn = document.getElementById('joinBtn');
+  if(btn) btn.addEventListener('click', handleJoin);
+}, 100);
 
 // ==========================================
-// 5. ระบบ Realtime 
+// ระบบ Realtime ฟังข้อมูลจากตารางใหม่
 // ==========================================
 function subscribeRealtime() {
   if(!supabase) return;
@@ -645,12 +628,16 @@ async function initRoomSession(){
   revealed = false;
   historyData = [];
 
-  questionText.className = 'placeholder-text';
-  questionText.textContent = 'รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม';
-  answerReveal.classList.remove('show');
-  drawBtn.disabled = false;
-  drawBtn.textContent = 'จับการ์ดคำถาม';
-  revealBtn.disabled = true;
+  const qt = document.getElementById('questionText');
+  if(qt) {
+    qt.className = 'placeholder-text';
+    qt.textContent = 'รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม';
+  }
+  
+  document.getElementById('answerReveal').classList.remove('show');
+  document.getElementById('drawBtn').disabled = false;
+  document.getElementById('drawBtn').textContent = 'จับการ์ดคำถาม';
+  document.getElementById('revealBtn').disabled = true;
   
   renderHistory();
   renderDeckCount();
@@ -666,6 +653,9 @@ async function initRoomSession(){
   tickHandle = setInterval(tick, 500);
 }
 
+// ==========================================
+// การควบคุมบอร์ดและการจับไพ่
+// ==========================================
 async function fetchDrawState() {
   if(!supabase) return;
   const { data, error } = await supabase
@@ -681,14 +671,21 @@ async function fetchDrawState() {
       current = deck[roomDrawIndex - 1];
       revealed = false;
       
-      questionText.className = 'question-text';
-      questionText.textContent = current.q;
-      answerReveal.classList.remove('show');
-      hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
-      hint.className = 'hint';
+      const qt = document.getElementById('questionText');
+      if(qt){
+        qt.className = 'question-text';
+        qt.textContent = current.q;
+      }
+      document.getElementById('answerReveal').classList.remove('show');
       
-      drawBtn.disabled = true;
-      revealBtn.disabled = false;
+      const hint = document.getElementById('hint');
+      if(hint){
+        hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
+        hint.className = 'hint';
+      }
+      
+      document.getElementById('drawBtn').disabled = true;
+      document.getElementById('revealBtn').disabled = false;
       renderDeckCount();
     }
   }
@@ -696,21 +693,30 @@ async function fetchDrawState() {
 
 async function drawCard(){
   if(roomDrawIndex >= deck.length) return;
+  const hint = document.getElementById('hint');
+  
   if(roomDrawIndex > 0 && !revealed){
-    hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
-    hint.className = 'hint error';
+    if(hint){
+      hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
+      hint.className = 'hint error';
+    }
     return;
   }
   
-  drawBtn.disabled = true;
-  hint.textContent = 'กำลังจับการ์ด...';
+  document.getElementById('drawBtn').disabled = true;
+  if(hint) {
+    hint.textContent = 'กำลังจับการ์ด...';
+    hint.className = 'hint';
+  }
   
   if(supabase) {
     const { error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
     if (error) {
-      hint.textContent = 'จับการ์ดไม่สำเร็จ ลองใหม่อีกครั้ง';
-      hint.className = 'hint error';
-      drawBtn.disabled = false;
+      if(hint) {
+        hint.textContent = 'จับการ์ดไม่สำเร็จ ลองใหม่อีกครั้ง';
+        hint.className = 'hint error';
+      }
+      document.getElementById('drawBtn').disabled = false;
     }
   }
 }
@@ -719,6 +725,7 @@ function tick(){
   if(!current || revealed) return;
   const elapsed = Date.now() - roomDrawnAt;
   const remaining = Math.max(10 - Math.floor(elapsed/1000), 0);
+  const timerRing = document.getElementById('timerRing');
   if(timerRing){
     timerRing.classList.remove('hidden');
     timerRing.setAttribute('data-t', remaining);
@@ -730,17 +737,20 @@ function tick(){
 function revealAnswerLocal(){
   if(!current || revealed) return;
   revealed = true;
+  const timerRing = document.getElementById('timerRing');
   if(timerRing) timerRing.classList.add('hidden');
-  if(answerText) answerText.textContent = current.a;
-  if(answerReveal) answerReveal.classList.add('show');
-  if(revealBtn) revealBtn.disabled = true;
+  document.getElementById('answerText').textContent = current.a;
+  document.getElementById('answerReveal').classList.add('show');
+  document.getElementById('revealBtn').disabled = true;
   
+  const drawBtn = document.getElementById('drawBtn');
   if(drawBtn){
     drawBtn.disabled = roomDrawIndex >= deck.length;
     drawBtn.textContent = roomDrawIndex >= deck.length ? 'จับการ์ดครบแล้ว' : 'จับการ์ดใบถัดไป';
   }
   
   const targetIdx = board.findIndex(c => c.t === current.cell);
+  const hint = document.getElementById('hint');
   if(hint){
     if(targetIdx !== -1 && marked.has(targetIdx)){
       hint.textContent = 'ช่องคำตอบนี้ถูกปิดไปแล้วก่อนหน้า จับใบถัดไปได้เลย';
@@ -764,28 +774,28 @@ function resetMyBoard(){
   }
   marked = new Set([FREE_INDEX]);
   wonAlready = false;
-  if(overlay) overlay.classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
   renderBoard();
   renderProgress();
   syncProgress(false); 
 }
 
 function renderDeckCount(){
-  if(deckCount){
+  const dc = document.getElementById('deckCount');
+  if(dc){
     const remaining = deck.length - roomDrawIndex;
-    deckCount.textContent = `เหลือ ${Math.max(0, remaining)} ใบ`;
+    dc.textContent = `เหลือ ${Math.max(0, remaining)} ใบ`;
   }
 }
 
 function renderProgress(){
-  if(progressLabel && progressFill){
-    const count = marked.size - 1;
-    progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
-    progressFill.style.width = `${(count/24)*100}%`;
-  }
+  const count = marked.size - 1;
+  document.getElementById('progressLabel').textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
+  document.getElementById('progressFill').style.width = `${(count/24)*100}%`;
 }
 
 function renderBoard(winCells){
+  const boardEl = document.getElementById('board');
   if(!boardEl) return;
   boardEl.innerHTML = '';
   board.forEach((cell, idx) => {
@@ -801,19 +811,21 @@ function renderBoard(winCells){
 }
 
 function renderHistory(){
-  if(!historyList) return;
-  historyList.innerHTML = '';
+  const hl = document.getElementById('historyList');
+  if(!hl) return;
+  hl.innerHTML = '';
   historyData.slice().reverse().forEach((h, i) => {
     const div = document.createElement('div');
     div.className = 'history-item';
     div.innerHTML = `<span class="num">${historyData.length - i}.</span><span>${h.q} — <b>${h.a}</b></span>`;
-    historyList.appendChild(div);
+    hl.appendChild(div);
   });
 }
 
 function handleCellClick(idx){
   if(wonAlready || marked.has(idx)) return;
   
+  const hint = document.getElementById('hint');
   if(!current || !revealed){
     if(hint){
       hint.textContent = 'รอเพื่อนจับการ์ดคำถามและรอดูเฉลยก่อนนะ';
@@ -834,6 +846,7 @@ function handleCellClick(idx){
     syncProgress(false);
     checkWin();
   } else {
+    const boardEl = document.getElementById('board');
     if(boardEl && boardEl.children[idx]){
       const el = boardEl.children[idx];
       el.classList.add('shake');
@@ -871,7 +884,7 @@ function checkWin(){
       wonAlready = true;
       renderBoard(line);
       setTimeout(() => {
-        if(overlay) overlay.classList.add('show');
+        document.getElementById('overlay').classList.add('show');
       }, 350);
       syncProgress(true);
       announceWin();
@@ -890,6 +903,9 @@ async function announceWin(){
   }]);
 }
 
+// ==========================================
+// การดึงข้อมูลผู้เล่นคนอื่นๆ
+// ==========================================
 async function pollPlayers(){
   if(!supabase) return;
   const { data, error } = await supabase
@@ -904,13 +920,10 @@ async function pollPlayers(){
 }
 
 function renderPlayers(players){
-  const roomPlayerCount = document.getElementById('roomPlayerCount');
-  const playersPanelCount = document.getElementById('playersPanelCount');
+  document.getElementById('roomPlayerCount').textContent = `${players.length}/${maxPlayers}`;
+  document.getElementById('playersPanelCount').textContent = `${players.length} คน`;
+  
   const playersListEl = document.getElementById('playersList');
-  
-  if(roomPlayerCount) roomPlayerCount.textContent = `${players.length}/${maxPlayers}`;
-  if(playersPanelCount) playersPanelCount.textContent = `${players.length} คน`;
-  
   if(!playersListEl) return;
   
   if(players.length === 0){
@@ -968,17 +981,19 @@ function renderWinnerBanner(winners){
   winnerBanner.classList.add('show');
 }
 
-if(drawBtn) drawBtn.addEventListener('click', drawCard);
-if(revealBtn) revealBtn.addEventListener('click', revealAnswerLocal);
-const newGameBtn = document.getElementById('newGameBtn');
-if(newGameBtn) newGameBtn.addEventListener('click', resetMyBoard);
-const playAgainBtn = document.getElementById('playAgainBtn');
-if(playAgainBtn) playAgainBtn.addEventListener('click', () => { if(overlay) overlay.classList.remove('show'); resetMyBoard(); });
-const rulesToggle = document.getElementById('rulesToggle');
-if(rulesToggle) rulesToggle.addEventListener('click', () => {
-  const rulesPanel = document.getElementById('rulesPanel');
-  if(rulesPanel) rulesPanel.classList.toggle('open');
-});
+// ผูกปุ่มเกมทั้งหมด
+setTimeout(() => {
+  document.getElementById('drawBtn')?.addEventListener('click', drawCard);
+  document.getElementById('revealBtn')?.addEventListener('click', revealAnswerLocal);
+  document.getElementById('newGameBtn')?.addEventListener('click', resetMyBoard);
+  document.getElementById('playAgainBtn')?.addEventListener('click', () => { 
+    document.getElementById('overlay').classList.remove('show'); 
+    resetMyBoard(); 
+  });
+  document.getElementById('rulesToggle')?.addEventListener('click', () => {
+    document.getElementById('rulesPanel').classList.toggle('open');
+  });
+}, 100);
 </script>
 </body>
 </html>
