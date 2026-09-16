@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- เรียกใช้เครื่องมือของ Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   :root{
     --paper: #FAF6E6;
@@ -144,7 +145,7 @@
   .field input[type="text"], .field input[type="number"], .field select{ width:100%; padding:11px 12px; border-radius:10px; border:1.5px solid var(--paper-line); font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper); }
   .field input:focus, .field select:focus{outline:2px solid var(--good); border-color:var(--good);}
   .mode-toggle{display:flex; gap:10px; margin-bottom:16px;}
-  .mode-option{ flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center; cursor:pointer; font-family:'Mitr'; font-size:13.5px; color:var(--ink-soft); }
+  .mode-option{ flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center; cursor:pointer; font-family:'Mitr'; font-size:13.5px; color:var(--ink-soft); transition: all 0.2s; }
   .mode-option input{margin-right:6px;}
   .mode-option.active{border-color:var(--good); background:#EFF7F1; color:var(--board-green); font-weight:600;}
   .lobby-error{ color:var(--coral); font-size:13px; text-align:center; margin: 4px 0 12px; min-height:16px; font-weight:600; }
@@ -278,7 +279,7 @@
       </div>
       <div class="question-box">
         <div class="timer-ring hidden" id="timerRing" data-t="10" style="--pct:100"></div>
-        <div id="questionText" class="placeholder-text">กดปุ่มด้านล่างเพื่อเริ่มจับการ์ดคำถามใบแรก</div>
+        <div id="questionText" class="placeholder-text">รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม</div>
       </div>
       <div class="answer-reveal" id="answerReveal">คำตอบคือ <b id="answerText"></b> — แตะช่องที่ตรงกันบนกระดาน</div>
       <div class="deck-actions">
@@ -323,12 +324,85 @@
 </div>
 
 <script>
-// --- เชื่อมต่อ Supabase ---
+// ==========================================
+// 1. ระบบควบคุมหน้าตาเว็บ (UI) แบบป้องกันการค้าง
+// ==========================================
+function updateModeUI(){
+  try {
+    var modeEl = document.querySelector('input[name="roomMode"]:checked');
+    if(!modeEl) return;
+    var mode = modeEl.value;
+    var creating = (mode === 'create');
+    
+    var modeOptionCreate = document.getElementById('modeOptionCreate');
+    var modeOptionJoin = document.getElementById('modeOptionJoin');
+    var maxPlayersField = document.getElementById('maxPlayersField');
+    var roomCodeLabel = document.getElementById('roomCodeLabel');
+    var roomCodeInput = document.getElementById('roomCodeInput');
+    
+    if(modeOptionCreate) {
+      if(creating) modeOptionCreate.classList.add('active');
+      else modeOptionCreate.classList.remove('active');
+    }
+    if(modeOptionJoin) {
+      if(!creating) modeOptionJoin.classList.add('active');
+      else modeOptionJoin.classList.remove('active');
+    }
+    
+    if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
+    if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
+    if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
+  } catch(e) {
+    console.error("UI Error:", e);
+  }
+}
+
+// ผูกปุ่มกดทันทีที่เปิดเว็บ (กันเว็บค้าง)
+var radios = document.querySelectorAll('input[name="roomMode"]');
+for(var i=0; i<radios.length; i++){
+  radios[i].addEventListener('change', updateModeUI);
+}
+updateModeUI();
+
+// ==========================================
+// 2. เชื่อมต่อฐานข้อมูล Supabase แบบปลอดภัย
+// ==========================================
 const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+let supabase = null;
 
-// ข้อมูลเกม
+try {
+  if (window.supabase) {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  } else {
+    console.warn("โหลด Supabase ไม่สำเร็จ เน็ตอาจจะบล็อก");
+  }
+} catch(e) {
+  console.error("Supabase Error:", e);
+}
+
+// DOM Elements สำหรับเกม
+const boardEl = document.getElementById('board');
+const questionText = document.getElementById('questionText');
+const answerReveal = document.getElementById('answerReveal');
+const answerText = document.getElementById('answerText');
+const drawBtn = document.getElementById('drawBtn');
+const revealBtn = document.getElementById('revealBtn');
+const deckCount = document.getElementById('deckCount');
+const hint = document.getElementById('hint');
+const historyList = document.getElementById('historyList');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const timerRing = document.getElementById('timerRing');
+const overlay = document.getElementById('overlay');
+const lobbyOverlay = document.getElementById('lobbyOverlay');
+const lobbyError = document.getElementById('lobbyError');
+const joinBtn = document.getElementById('joinBtn');
+const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+
+// ==========================================
+// 3. ข้อมูลคำถามและไอเทมในเกมบิงโก
+// ==========================================
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"}, {t:"โรคเบาหวาน", i:"🩸"}, {t:"โรคความดันโลหิตสูง", i:"💢"},
   {t:"โรคหัวใจ", i:"❤️‍🩹"}, {t:"โรคตับและไขมันพอกตับ", i:"🩺"}, {t:"ดื่มน้ำอัดลมทุกวัน", i:"🥤"},
@@ -411,25 +485,7 @@ let maxPlayers = 0;
 let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 let tickHandle = null;
-
-// DOM
-const boardEl = document.getElementById('board');
-const questionText = document.getElementById('questionText');
-const answerReveal = document.getElementById('answerReveal');
-const answerText = document.getElementById('answerText');
-const drawBtn = document.getElementById('drawBtn');
-const revealBtn = document.getElementById('revealBtn');
-const deckCount = document.getElementById('deckCount');
-const hint = document.getElementById('hint');
-const historyList = document.getElementById('historyList');
-const progressFill = document.getElementById('progressFill');
-const progressLabel = document.getElementById('progressLabel');
-const timerRing = document.getElementById('timerRing');
-const overlay = document.getElementById('overlay');
-const lobbyOverlay = document.getElementById('lobbyOverlay');
-const joinBtn = document.getElementById('joinBtn');
-const lobbyError = document.getElementById('lobbyError');
-const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+let realtimeChannel = null;
 
 function shuffle(arr){
   const a = arr.slice();
@@ -466,52 +522,40 @@ function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
-function updateModeUI(){
-  const mode = document.querySelector('input[name="roomMode"]:checked')?.value;
-  if(!mode) return;
-  const creating = mode === 'create';
-  const modeOptionCreate = document.getElementById('modeOptionCreate');
-  const modeOptionJoin = document.getElementById('modeOptionJoin');
-  const maxPlayersField = document.getElementById('maxPlayersField');
-  const roomCodeLabel = document.getElementById('roomCodeLabel');
-  const roomCodeInput = document.getElementById('roomCodeInput');
-  
-  if(modeOptionCreate) modeOptionCreate.classList.toggle('active', creating);
-  if(modeOptionJoin) modeOptionJoin.classList.toggle('active', !creating);
-  if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
-  if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
-  if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
-}
-
-document.querySelectorAll('input[name="roomMode"]').forEach(r => {
-  r.addEventListener('change', updateModeUI);
-});
-// Initialize UI on load
-updateModeUI();
-
+// ==========================================
+// 4. ฟังก์ชันเข้าสู่ห้อง (กดปุ่มเข้าสู่เกม)
+// ==========================================
 async function handleJoin(){
+  var nameInput = document.getElementById('playerNameInput');
+  var gradeSelect = document.getElementById('gradeSelect');
+  var maxInput = document.getElementById('maxPlayersInput');
+  var codeInput = document.getElementById('roomCodeInput');
+
   lobbyError.textContent = '';
-  const playerNameInput = document.getElementById('playerNameInput');
-  const gradeSelect = document.getElementById('gradeSelect');
-  const maxPlayersInput = document.getElementById('maxPlayersInput');
-  const roomCodeInput = document.getElementById('roomCodeInput');
-  
-  const name = playerNameInput.value.trim();
+  const name = nameInput.value.trim();
   const grade = gradeSelect.value;
-  const mode = document.querySelector('input[name="roomMode"]:checked').value;
+  
+  var modeEl = document.querySelector('input[name="roomMode"]:checked');
+  if(!modeEl) return;
+  const mode = modeEl.value;
 
   if(!name){ lobbyError.textContent = 'กรุณากรอกชื่อผู้เล่น'; return; }
   if(!grade){ lobbyError.textContent = 'กรุณาเลือกระดับชั้น'; return; }
+  
+  // ตรวจสอบว่าระบบโหลด Supabase สำเร็จหรือไม่
+  if(!supabase) {
+    lobbyError.textContent = 'ระบบฐานข้อมูลขัดข้อง (เน็ตอาจถูกบล็อก) กรุณาลองใหม่';
+    return;
+  }
 
   joinBtn.disabled = true;
   joinBtn.textContent = 'กำลังเชื่อมต่อ...';
 
   try {
     if(mode === 'create'){
-      let code = roomCodeInput.value.trim() || genRoomCode();
-      const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
+      let code = codeInput.value.trim() || genRoomCode();
+      const max = Math.max(1, Math.min(30, parseInt(maxInput.value, 10) || 4));
 
-      // 1) เพิ่มข้อมูลลงตาราง rooms
       const { error: roomErr } = await supabase
         .from('rooms')
         .insert([{ room_code: code, max_players: max }]);
@@ -523,13 +567,8 @@ async function handleJoin(){
       roomCode = code;
       maxPlayers = max;
     } else {
-      // เข้าร่วมห้องเดิม ตรวจสอบจากตาราง rooms
-      const code = roomCodeInput.value.trim();
-      if(!code){
-        lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
-        joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-        return;
-      }
+      const code = codeInput.value.trim();
+      if(!code){ throw new Error('กรุณากรอกรหัสห้อง'); }
 
       const { data, error } = await supabase
         .from('rooms')
@@ -538,9 +577,7 @@ async function handleJoin(){
         .single();
 
       if (error || !data) {
-        lobbyError.textContent = 'ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง';
-        joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
-        return;
+        throw new Error('ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง');
       }
       roomCode = code;
       maxPlayers = data.max_players;
@@ -550,7 +587,6 @@ async function handleJoin(){
     playerName = name;
     playerGrade = grade;
 
-    // 2) บันทึกรายชื่อผู้เล่นลง room_progress
     const { error: progErr } = await supabase
       .from('room_progress')
       .insert([{
@@ -568,7 +604,6 @@ async function handleJoin(){
       throw progErr;
     }
 
-    // เข้าระบบสำเร็จ!
     lobbyOverlay.style.display = 'none';
     roomCodeDisplay.textContent = roomCode;
     initRoomSession();
@@ -580,28 +615,26 @@ async function handleJoin(){
     joinBtn.textContent = 'เข้าสู่เกม';
   }
 }
+if(joinBtn) joinBtn.addEventListener('click', handleJoin);
 
-joinBtn.addEventListener('click', handleJoin);
-
-let realtimeChannel = null;
-
+// ==========================================
+// 5. ระบบ Realtime 
+// ==========================================
 function subscribeRealtime() {
+  if(!supabase) return;
   if (realtimeChannel) supabase.removeChannel(realtimeChannel);
   
-  // เปิด WebSockets ไปยัง Supabase สำหรับ 3 ตาราง
   realtimeChannel = supabase.channel('room_updates_' + roomCode)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_draw', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchDrawState(); // มีคนจั่วไพ่
+      fetchDrawState(); 
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_progress', filter: `room_code=eq.${roomCode}` }, payload => {
-      pollPlayers(); // มีคนได้คะแนนเพิ่ม
+      pollPlayers(); 
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_winners', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchWinners(); // มีคนบิงโก
+      fetchWinners(); 
     })
-    .subscribe((status) => {
-      console.log("Realtime status:", status);
-    });
+    .subscribe();
 }
 
 async function initRoomSession(){
@@ -623,12 +656,10 @@ async function initRoomSession(){
   renderDeckCount();
   resetMyBoard();
 
-  // ดึงข้อมูลครั้งแรกเมื่อเข้าห้อง
   await fetchDrawState();
   await pollPlayers();
   await fetchWinners();
 
-  // เริ่มฟัง Realtime
   subscribeRealtime();
 
   tickHandle && clearInterval(tickHandle);
@@ -636,6 +667,7 @@ async function initRoomSession(){
 }
 
 async function fetchDrawState() {
+  if(!supabase) return;
   const { data, error } = await supabase
     .from('room_draw')
     .select('*')
@@ -673,13 +705,13 @@ async function drawCard(){
   drawBtn.disabled = true;
   hint.textContent = 'กำลังจับการ์ด...';
   
-  // เรียกใช้งาน RPC เพื่อป้องกัน Race condition จากคนหลายคนกดพร้อมกัน
-  const { error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
-  if (error) {
-    console.error("RPC Error:", error);
-    hint.textContent = 'จับการ์ดไม่สำเร็จ ลองใหม่อีกครั้ง';
-    hint.className = 'hint error';
-    drawBtn.disabled = false;
+  if(supabase) {
+    const { error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
+    if (error) {
+      hint.textContent = 'จับการ์ดไม่สำเร็จ ลองใหม่อีกครั้ง';
+      hint.className = 'hint error';
+      drawBtn.disabled = false;
+    }
   }
 }
 
@@ -735,7 +767,7 @@ function resetMyBoard(){
   if(overlay) overlay.classList.remove('show');
   renderBoard();
   renderProgress();
-  syncProgress(false); // อัปเดตไปที่ DB ว่าเริ่มกระดานใหม่ (0 คะแนน)
+  syncProgress(false); 
 }
 
 function renderDeckCount(){
@@ -799,7 +831,7 @@ function handleCellClick(idx){
       hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย!`;
       hint.className = 'hint success';
     }
-    syncProgress(false); // ส่งคะแนนไป Supabase
+    syncProgress(false);
     checkWin();
   } else {
     if(boardEl && boardEl.children[idx]){
@@ -815,8 +847,8 @@ function handleCellClick(idx){
 }
 
 async function syncProgress(isWon){
-  if(!roomCode || !playerId) return;
-  const { error } = await supabase
+  if(!roomCode || !playerId || !supabase) return;
+  await supabase
     .from('room_progress')
     .update({ 
       marked: marked.size - 1, 
@@ -825,8 +857,6 @@ async function syncProgress(isWon){
     })
     .eq('room_code', roomCode)
     .eq('player_id', playerId);
-    
-  if (error) console.error("Sync Progress Error:", error);
 }
 
 function checkWin(){
@@ -851,6 +881,7 @@ function checkWin(){
 }
 
 async function announceWin(){
+  if(!supabase) return;
   await supabase.from('room_winners').insert([{ 
     room_code: roomCode, 
     player_id: playerId, 
@@ -860,13 +891,13 @@ async function announceWin(){
 }
 
 async function pollPlayers(){
+  if(!supabase) return;
   const { data, error } = await supabase
     .from('room_progress')
     .select('*')
     .eq('room_code', roomCode);
     
   if(!error && data) {
-    // เรียงตามคะแนนที่มากที่สุด
     data.sort((a,b) => (b.marked || 0) - (a.marked || 0));
     renderPlayers(data);
   }
@@ -910,6 +941,7 @@ function renderPlayers(players){
 }
 
 async function fetchWinners() {
+  if(!supabase) return;
   const { data, error } = await supabase
     .from('room_winners')
     .select('*')
