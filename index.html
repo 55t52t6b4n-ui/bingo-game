@@ -642,8 +642,19 @@ const winnerBanner = document.getElementById('winnerBanner');
 // 🔧 ถ้าจะย้ายไปใช้โปรเจกต์ Supabase อื่น แก้ 2 ค่านี้ (Project Settings > API)
 const SUPABASE_URL = 'https://qswyqlemlijsdnwbwqer.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-const SUPABASE_READY = !SUPABASE_URL.includes('YOUR_PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_ANON_KEY');
-const supabase = SUPABASE_READY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let supabase = null;
+let SUPABASE_READY = false;
+try {
+  const configLooksReal = !SUPABASE_URL.includes('YOUR_PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_ANON_KEY');
+  if (configLooksReal && window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    SUPABASE_READY = true;
+  } else {
+    console.error('Supabase SDK not available on window — the CDN script may have failed to load.');
+  }
+} catch (e) {
+  console.error('Supabase init failed', e);
+}
 
 /* ---------- random helpers ---------- */
 function shuffle(arr){
@@ -696,14 +707,14 @@ updateModeUI();
 
 if(!SUPABASE_READY){
   const warn = document.getElementById('firebaseWarning');
-  if(warn){ warn.style.display = 'block'; warn.textContent = '⚠️ ยังไม่ได้ตั้งค่า Supabase URL/Key ในโค้ด'; }
+  if(warn){ warn.style.display = 'block'; warn.textContent = '⚠️ เชื่อมต่อฐานข้อมูลไม่ได้ตอนนี้ ลองรีเฟรชหน้าเว็บอีกครั้ง'; }
 }
 
 async function handleJoin(){
   lobbyError.textContent = '';
 
   if(!SUPABASE_READY){
-    lobbyError.textContent = 'ยังไม่ได้ตั้งค่า Supabase — กรุณาใส่ SUPABASE_URL/SUPABASE_ANON_KEY ในโค้ดก่อนใช้งานจริง';
+    lobbyError.textContent = 'เชื่อมต่อฐานข้อมูลไม่ได้ (Supabase SDK โหลดไม่สำเร็จ หรือยังไม่ได้ตั้งค่า) ลองรีเฟรชหน้าเว็บ หรือตรวจสอบอินเทอร์เน็ต/ตัวบล็อกโฆษณา';
     return;
   }
 
