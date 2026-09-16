@@ -6,6 +6,7 @@
 <title>BINGO ห่างไกลโรค</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- เรียกใช้เครื่องมือของ Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -40,151 +41,61 @@
   .wrap{max-width: 1040px; margin: 0 auto;}
 
   /* ---- Hero chalkboard ---- */
-  .hero{
-    background: var(--wood);
-    border-radius: 22px;
-    padding: 14px;
-    box-shadow: var(--card-shadow);
-  }
+  .hero{ background: var(--wood); border-radius: 22px; padding: 14px; box-shadow: var(--card-shadow); }
   .hero-inner{
     background: radial-gradient(ellipse at top, #345448 0%, var(--board-green) 55%, var(--board-green-dark) 100%);
-    border-radius: 14px;
-    padding: 38px 28px 32px;
-    text-align:center;
-    position:relative;
-    overflow:hidden;
+    border-radius: 14px; padding: 38px 28px 32px; text-align:center; position:relative; overflow:hidden;
   }
   .hero-inner::before{
-    content:"";
-    position:absolute; inset:0;
+    content:""; position:absolute; inset:0;
     background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
-    background-size: 5px 5px;
-    pointer-events:none;
+    background-size: 5px 5px; pointer-events:none;
   }
   .eyebrow-star{font-size:22px; margin-bottom:6px;}
   .hero h1{
-    font-family:'Mitr', sans-serif;
-    font-weight:700;
-    color: var(--chalk);
-    font-size: clamp(30px, 5.5vw, 48px);
-    margin: 0 0 6px;
-    letter-spacing: 0.5px;
+    font-family:'Mitr', sans-serif; font-weight:700; color: var(--chalk);
+    font-size: clamp(30px, 5.5vw, 48px); margin: 0 0 6px; letter-spacing: 0.5px;
     text-shadow: 0 0 1px rgba(245,241,227,0.5), 2px 2px 0 rgba(0,0,0,0.15);
   }
-  .hero p{
-    font-family:'Mitr', sans-serif;
-    color: var(--yellow);
-    font-size: clamp(15px, 2.4vw, 19px);
-    margin: 0 0 22px;
-    font-weight: 400;
-  }
-  .btn{
-    font-family:'Mitr', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    border:none;
-    border-radius: 12px;
-    padding: 13px 26px;
-    cursor:pointer;
-    transition: transform .08s ease;
-  }
+  .hero p{ font-family:'Mitr', sans-serif; color: var(--yellow); font-size: clamp(15px, 2.4vw, 19px); margin: 0 0 22px; font-weight: 400; }
+  .btn{ font-family:'Mitr', sans-serif; font-size: 16px; font-weight: 500; border:none; border-radius: 12px; padding: 13px 26px; cursor:pointer; transition: transform .08s ease; }
   .btn:active{transform: translateY(2px);}
   .btn:disabled{opacity:.45; cursor:not-allowed;}
-  .btn-primary{
-    background: var(--yellow);
-    color: var(--board-green-dark);
-    box-shadow: 0 4px 0 var(--yellow-dark);
-  }
+  .btn-primary{ background: var(--yellow); color: var(--board-green-dark); box-shadow: 0 4px 0 var(--yellow-dark); }
   .btn-primary:active:not(:disabled){box-shadow:0 2px 0 var(--yellow-dark);}
-  .btn-ghost{
-    background: transparent;
-    color: var(--chalk);
-    border: 1.5px dashed rgba(245,241,227,0.5);
-  }
+  .btn-ghost{ background: transparent; color: var(--chalk); border: 1.5px dashed rgba(245,241,227,0.5); }
+  .btn-secondary{ background: var(--board-green); color:var(--chalk); box-shadow:0 4px 0 var(--board-green-dark); }
+  .btn-outline{ background:#fff; color:var(--board-green); border:1.5px solid var(--board-green); }
 
   /* ---- status row ---- */
-  .status{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:16px; flex-wrap:wrap;
-    margin: 20px 4px 22px;
-  }
+  .status{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin: 20px 4px 22px; }
   .status-left{display:flex; align-items:center; gap:12px; font-size:14px; color:var(--ink-soft);}
-  .progress-track{
-    width:150px; height:9px; background:#E3D9B7; border-radius:6px; overflow:hidden;
-  }
+  .progress-track{ width:150px; height:9px; background:#E3D9B7; border-radius:6px; overflow:hidden; }
   .progress-fill{height:100%; background:var(--good); width:0%; transition:width .3s ease;}
-  .rules-toggle{
-    font-family:'Mitr', sans-serif;
-    font-size:14px; color: var(--board-green);
-    background:none; border:1.5px solid var(--board-green); border-radius:20px;
-    padding:8px 16px; cursor:pointer;
-  }
-
-  /* ---- rules panel ---- */
-  .rules{
-    background:#fff; border:1.5px solid var(--paper-line); border-radius:16px;
-    padding:20px 22px; margin: 0 4px 22px; display:none;
-    font-size:14.5px; line-height:1.75; color:var(--ink-soft);
-  }
+  .rules-toggle{ font-family:'Mitr', sans-serif; font-size:14px; color: var(--board-green); background:none; border:1.5px solid var(--board-green); border-radius:20px; padding:8px 16px; cursor:pointer; }
+  .rules{ background:#fff; border:1.5px solid var(--paper-line); border-radius:16px; padding:20px 22px; margin: 0 4px 22px; display:none; font-size:14.5px; line-height:1.75; color:var(--ink-soft); }
   .rules.open{display:block;}
   .rules h3{font-family:'Mitr'; color:var(--board-green); margin:0 0 8px; font-size:16px;}
   .rules ul{margin:6px 0 14px; padding-left:20px;}
-  .rules ul:last-child{margin-bottom:0;}
 
   /* ---- layout ---- */
-  .grid-layout{
-    display:grid; grid-template-columns: 1fr 1.15fr; gap:20px;
-  }
-  @media (max-width: 860px){
-    .grid-layout{grid-template-columns: 1fr;}
-  }
+  .grid-layout{ display:grid; grid-template-columns: 1fr 1.15fr; gap:20px; }
+  @media (max-width: 860px){ .grid-layout{grid-template-columns: 1fr;} }
 
   /* ---- question deck panel ---- */
-  .panel{
-    background:#fff; border-radius:18px; padding:22px; box-shadow: var(--card-shadow);
-    border: 1.5px solid var(--paper-line);
-  }
-  .panel-title{
-    font-family:'Mitr'; font-size:14px; color: var(--board-green);
-    display:flex; justify-content:space-between; margin-bottom:14px;
-  }
-  .question-box{
-    background: var(--board-green);
-    border-radius:14px; padding:26px 20px; min-height:120px;
-    display:flex; align-items:center; justify-content:center; text-align:center;
-    position:relative;
-  }
-  .question-text{
-    font-family:'Mitr'; color:var(--chalk); font-size:19px; line-height:1.6; font-weight:500;
-  }
-  .placeholder-text{
-    font-family:'Sarabun'; color: rgba(245,241,227,0.55); font-size:15px;
-  }
-  .timer-ring{
-    position:absolute; top:10px; right:14px;
-    width:38px; height:38px; border-radius:50%;
-    background: conic-gradient(var(--yellow) calc(var(--pct,100)*1%), rgba(255,255,255,0.15) 0);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Mitr'; font-size:13px; color:var(--chalk); font-weight:600;
-  }
-  .timer-ring::after{
-    content: attr(data-t); position:relative;
-  }
+  .panel{ background:#fff; border-radius:18px; padding:22px; box-shadow: var(--card-shadow); border: 1.5px solid var(--paper-line); }
+  .panel-title{ font-family:'Mitr'; font-size:14px; color: var(--board-green); display:flex; justify-content:space-between; margin-bottom:14px; }
+  .question-box{ background: var(--board-green); border-radius:14px; padding:26px 20px; min-height:120px; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; }
+  .question-text{ font-family:'Mitr'; color:var(--chalk); font-size:19px; line-height:1.6; font-weight:500; }
+  .placeholder-text{ font-family:'Sarabun'; color: rgba(245,241,227,0.55); font-size:15px; }
+  .timer-ring{ position:absolute; top:10px; right:14px; width:38px; height:38px; border-radius:50%; background: conic-gradient(var(--yellow) calc(var(--pct,100)*1%), rgba(255,255,255,0.15) 0); display:flex; align-items:center; justify-content:center; font-family:'Mitr'; font-size:13px; color:var(--chalk); font-weight:600; }
+  .timer-ring::after{ content: attr(data-t); position:relative; }
   .timer-ring.hidden{display:none;}
-  .answer-reveal{
-    margin-top:14px; text-align:center; font-family:'Mitr'; font-size:15px;
-    color: var(--good); display:none;
-  }
+  .answer-reveal{ margin-top:14px; text-align:center; font-family:'Mitr'; font-size:15px; color: var(--good); display:none; }
   .answer-reveal.show{display:block;}
   .answer-reveal b{color:var(--ink);}
   .deck-actions{display:flex; gap:10px; margin-top:16px;}
   .deck-actions .btn{flex:1;}
-  .btn-secondary{
-    background: var(--board-green); color:var(--chalk); box-shadow:0 4px 0 var(--board-green-dark);
-  }
-  .btn-outline{
-    background:#fff; color:var(--board-green); border:1.5px solid var(--board-green);
-  }
   .hint{font-size:13px; color:var(--ink-soft); margin-top:12px; text-align:center; min-height:18px;}
   .hint.error{color:var(--coral); font-weight:600;}
   .hint.success{color:var(--good); font-weight:600;}
@@ -192,154 +103,75 @@
   .history{margin-top:18px;}
   .history-title{font-family:'Mitr'; font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
   .history-list{max-height:150px; overflow-y:auto; font-size:13px; color:var(--ink-soft); padding-right:4px;}
-  .history-item{
-    padding:7px 0; border-bottom:1px dashed var(--paper-line); display:flex; gap:8px;
-  }
+  .history-item{ padding:7px 0; border-bottom:1px dashed var(--paper-line); display:flex; gap:8px; }
   .history-item .num{color:var(--board-green); font-weight:600; font-family:'Mitr'; flex-shrink:0;}
 
   /* ---- board panel ---- */
   .board-panel{background: var(--wood); border-radius:18px; padding:12px; box-shadow: var(--card-shadow);}
   .board-inner{background:#fff; border-radius:12px; padding:16px;}
-  .board-header{
-    font-family:'Mitr'; text-align:center; color:var(--board-green); font-weight:600;
-    font-size:15px; margin-bottom:12px;
-  }
-  .board{
-    display:grid; grid-template-columns: repeat(5, 1fr); gap:6px;
-  }
-  .cell{
-    aspect-ratio: 1 / 1;
-    background: var(--paper);
-    border: 1.5px solid var(--paper-line);
-    border-radius:9px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:4px 3px; cursor:pointer;
-    transition: transform .12s ease, background .15s ease;
-    position:relative;
-  }
+  .board-header{ font-family:'Mitr'; text-align:center; color:var(--board-green); font-weight:600; font-size:15px; margin-bottom:12px; }
+  .board{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; }
+  .cell{ aspect-ratio: 1 / 1; background: var(--paper); border: 1.5px solid var(--paper-line); border-radius:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:4px 3px; cursor:pointer; transition: transform .12s ease, background .15s ease; position:relative; }
   .cell:hover{transform: translateY(-2px);}
   .cell .icon{font-size: clamp(15px,3vw,20px); line-height:1;}
-  .cell .label{
-    font-size: clamp(8.5px, 1.5vw, 10.5px); margin-top:3px; line-height:1.2; color:var(--ink-soft);
-    word-break: break-word;
-  }
+  .cell .label{ font-size: clamp(8.5px, 1.5vw, 10.5px); margin-top:3px; line-height:1.2; color:var(--ink-soft); word-break: break-word; }
   .cell.free{background: var(--yellow); border-color:var(--yellow-dark);}
   .cell.free .label{color:var(--board-green-dark); font-weight:700; font-family:'Mitr';}
   .cell.marked{background: var(--good); border-color:#3d8259;}
   .cell.marked .label{color:#fff;}
   .cell.marked .icon{filter: brightness(1.3);}
-  .cell.marked::after{
-    content:"✓"; position:absolute; top:3px; right:5px; color:#fff; font-size:12px; font-weight:700;
-  }
+  .cell.marked::after{ content:"✓"; position:absolute; top:3px; right:5px; color:#fff; font-size:12px; font-weight:700; }
   .cell.shake{animation: shake .35s ease;}
-  @keyframes shake{
-    0%,100%{transform:translateX(0);}
-    25%{transform:translateX(-4px);}
-    75%{transform:translateX(4px);}
-  }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
   .cell.win-line{outline: 3px solid var(--yellow); outline-offset:-2px;}
 
   /* ---- win overlay ---- */
-  .overlay{
-    position:fixed; inset:0; background:rgba(34,51,43,0.72);
-    display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
-  }
+  .overlay{ position:fixed; inset:0; background:rgba(34,51,43,0.72); display:none; align-items:center; justify-content:center; z-index:50; padding:20px; }
   .overlay.show{display:flex;}
-  .win-card{
-    background:#fff; border-radius:22px; padding:38px 32px; text-align:center;
-    max-width:380px; box-shadow: 0 12px 0 rgba(0,0,0,0.15);
-  }
+  .win-card{ background:#fff; border-radius:22px; padding:38px 32px; text-align:center; max-width:380px; box-shadow: 0 12px 0 rgba(0,0,0,0.15); }
   .win-card .big{font-family:'Mitr'; font-size:34px; color:var(--board-green); font-weight:700; margin-bottom:8px;}
   .win-card p{color:var(--ink-soft); font-size:15px; margin-bottom:22px;}
   .win-emoji{font-size:44px; margin-bottom:10px;}
-
-  footer{
-    text-align:center; margin-top:34px; color: var(--ink-soft); font-size:12.5px;
-  }
+  footer{ text-align:center; margin-top:34px; color: var(--ink-soft); font-size:12.5px; }
 
   /* ---- lobby / join screen ---- */
-  .lobby-overlay{
-    position:fixed; inset:0; z-index:100; overflow-y:auto;
-    background-color: var(--paper);
-    background-image:
-      linear-gradient(var(--paper-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
-    background-size: 26px 26px;
-    padding: 30px 16px 40px;
-  }
-  .lobby-card{
-    max-width: 420px; margin: 0 auto; background:#fff; border-radius:20px;
-    border:1.5px solid var(--paper-line); box-shadow: var(--card-shadow); padding:26px 24px;
-  }
-  .lobby-card .lobby-title{
-    font-family:'Mitr'; color:var(--board-green); font-size:22px; font-weight:700; text-align:center; margin: 6px 0 2px;
-  }
-  .lobby-card .lobby-sub{
-    text-align:center; color:var(--ink-soft); font-size:13.5px; margin-bottom:20px;
-  }
+  .lobby-overlay{ position:fixed; inset:0; z-index:100; overflow-y:auto; background-color: var(--paper); background-image: linear-gradient(var(--paper-line) 1px, transparent 1px), linear-gradient(90deg, var(--paper-line) 1px, transparent 1px); background-size: 26px 26px; padding: 30px 16px 40px; }
+  .lobby-card{ max-width: 420px; margin: 0 auto; background:#fff; border-radius:20px; border:1.5px solid var(--paper-line); box-shadow: var(--card-shadow); padding:26px 24px; }
+  .lobby-card .lobby-title{ font-family:'Mitr'; color:var(--board-green); font-size:22px; font-weight:700; text-align:center; margin: 6px 0 2px; }
+  .lobby-card .lobby-sub{ text-align:center; color:var(--ink-soft); font-size:13.5px; margin-bottom:20px; }
   .field{margin-bottom:16px;}
-  .field label{
-    display:block; font-family:'Mitr'; font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500;
-  }
-  .field input[type="text"], .field input[type="number"], .field select{
-    width:100%; padding:11px 12px; border-radius:10px; border:1.5px solid var(--paper-line);
-    font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper);
-  }
+  .field label{ display:block; font-family:'Mitr'; font-size:13px; color:var(--ink); margin-bottom:6px; font-weight:500; }
+  .field input[type="text"], .field input[type="number"], .field select{ width:100%; padding:11px 12px; border-radius:10px; border:1.5px solid var(--paper-line); font-family:'Sarabun'; font-size:14.5px; color:var(--ink); background:var(--paper); }
   .field input:focus, .field select:focus{outline:2px solid var(--good); border-color:var(--good);}
   .mode-toggle{display:flex; gap:10px; margin-bottom:16px;}
-  .mode-option{
-    flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center;
-    cursor:pointer; font-family:'Mitr'; font-size:13.5px; color:var(--ink-soft);
-  }
+  .mode-option{ flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px; text-align:center; cursor:pointer; font-family:'Mitr'; font-size:13.5px; color:var(--ink-soft); }
   .mode-option input{margin-right:6px;}
   .mode-option.active{border-color:var(--good); background:#EFF7F1; color:var(--board-green); font-weight:600;}
-  .lobby-error{
-    color:var(--coral); font-size:13px; text-align:center; margin: 4px 0 12px; min-height:16px; font-weight:600;
-  }
+  .lobby-error{ color:var(--coral); font-size:13px; text-align:center; margin: 4px 0 12px; min-height:16px; font-weight:600; }
   .lobby-card .btn{width:100%;}
   .lobby-hint{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.6;}
 
   /* ---- room info bar ---- */
-  .room-bar{
-    display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
-    margin: 16px 4px 0; font-family:'Mitr'; font-size:13px; color:var(--board-green);
-  }
-  .room-pill{
-    background:#fff; border:1.5px solid var(--paper-line); border-radius:20px; padding:6px 14px;
-    display:flex; align-items:center; gap:6px;
-  }
+  .room-bar{ display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin: 16px 4px 0; font-family:'Mitr'; font-size:13px; color:var(--board-green); }
+  .room-pill{ background:#fff; border:1.5px solid var(--paper-line); border-radius:20px; padding:6px 14px; display:flex; align-items:center; gap:6px; }
   .room-pill b{color:var(--board-green-dark); letter-spacing:1px;}
 
   /* ---- players panel ---- */
   .players-panel{margin-top:22px;}
   .players-list{display:flex; flex-direction:column; gap:8px;}
-  .player-row{
-    display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--paper-line);
-    border-radius:12px; padding:10px 14px;
-  }
+  .player-row{ display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--paper-line); border-radius:12px; padding:10px 14px; }
   .player-row.me{border-color:var(--good); background:#F3FAF5;}
-  .player-avatar{
-    width:34px; height:34px; border-radius:50%; background:var(--board-green); color:var(--chalk);
-    display:flex; align-items:center; justify-content:center; font-family:'Mitr'; font-weight:600; font-size:14px;
-    flex-shrink:0;
-  }
+  .player-avatar{ width:34px; height:34px; border-radius:50%; background:var(--board-green); color:var(--chalk); display:flex; align-items:center; justify-content:center; font-family:'Mitr'; font-weight:600; font-size:14px; flex-shrink:0; }
   .player-info{flex:1; min-width:0;}
   .player-name-row{display:flex; align-items:center; gap:6px; font-family:'Mitr'; font-size:13.5px; color:var(--ink);}
-  .player-name-row .grade-badge{
-    font-size:10.5px; background:var(--paper); border:1px solid var(--paper-line); border-radius:8px;
-    padding:1px 7px; color:var(--ink-soft); font-family:'Sarabun';
-  }
+  .player-name-row .grade-badge{ font-size:10.5px; background:var(--paper); border:1px solid var(--paper-line); border-radius:8px; padding:1px 7px; color:var(--ink-soft); font-family:'Sarabun'; }
   .player-progress-track{width:100%; height:6px; background:#E3D9B7; border-radius:5px; overflow:hidden; margin-top:5px;}
-  .player-progress-fill{height:100%; background:var(--good);}
+  .player-progress-fill{height:100%; background:var(--good); transition: width 0.3s ease;}
   .player-count{font-size:12px; color:var(--ink-soft); flex-shrink:0; white-space:nowrap;}
   .players-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:14px;}
 
   /* ---- room-wide winner banner ---- */
-  .winner-banner{
-    display:none; background: var(--yellow); border:1.5px solid var(--yellow-dark); border-radius:14px;
-    padding:12px 16px; text-align:center; font-family:'Mitr'; font-size:14px; color:var(--board-green-dark);
-    margin: 18px 4px 0; font-weight:600;
-  }
+  .winner-banner{ display:none; background: var(--yellow); border:1.5px solid var(--yellow-dark); border-radius:14px; padding:12px 16px; text-align:center; font-family:'Mitr'; font-size:14px; color:var(--board-green-dark); margin: 18px 4px 0; font-weight:600; }
   .winner-banner.show{display:block;}
 </style>
 </head>
@@ -396,7 +228,6 @@
 </div>
 
 <div class="wrap">
-
   <div class="hero">
     <div class="hero-inner">
       <div class="eyebrow-star">⭐</div>
@@ -440,27 +271,21 @@
   </div>
 
   <div class="grid-layout">
-
     <div class="panel">
       <div class="panel-title">
         <span>การ์ดคำถาม</span>
         <span id="deckCount">เหลือ 24 ใบ</span>
       </div>
-
       <div class="question-box">
         <div class="timer-ring hidden" id="timerRing" data-t="10" style="--pct:100"></div>
-        <div id="questionText" class="placeholder-text">รอผู้เล่นคนแรกกดปุ่มจับการ์ดคำถามเพื่อเริ่มเกม</div>
+        <div id="questionText" class="placeholder-text">กดปุ่มด้านล่างเพื่อเริ่มจับการ์ดคำถามใบแรก</div>
       </div>
-
       <div class="answer-reveal" id="answerReveal">คำตอบคือ <b id="answerText"></b> — แตะช่องที่ตรงกันบนกระดาน</div>
-
       <div class="deck-actions">
         <button class="btn btn-secondary" id="drawBtn">จับการ์ดคำถาม</button>
         <button class="btn btn-outline" id="revealBtn" disabled>ดูเฉลย</button>
       </div>
-
       <div class="hint" id="hint"></div>
-
       <div class="history">
         <div class="history-title">ประวัติการ์ดที่ผ่านมา</div>
         <div class="history-list" id="historyList"></div>
@@ -473,7 +298,6 @@
         <div class="board" id="board"></div>
       </div>
     </div>
-
   </div>
 
   <div class="panel players-panel">
@@ -494,11 +318,17 @@
     <div class="win-emoji">🎉</div>
     <div class="big">บิงโก!</div>
     <p>คุณปิดครบ 5 ช่องเรียบร้อยแล้ว เก่งมาก!</p>
-    <button class="btn btn-primary" id="playAgainBtn">เล่นอีกครั้ง</button>
+    <button class="btn btn-primary" id="playAgainBtn">ปิดหน้าต่าง</button>
   </div>
 </div>
 
 <script>
+// --- เชื่อมต่อ Supabase ---
+const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
+const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// ข้อมูลเกม
 const ITEMS = [
   {t:"โรคอ้วน", i:"⚖️"}, {t:"โรคเบาหวาน", i:"🩸"}, {t:"โรคความดันโลหิตสูง", i:"💢"},
   {t:"โรคหัวใจ", i:"❤️‍🩹"}, {t:"โรคตับและไขมันพอกตับ", i:"🩺"}, {t:"ดื่มน้ำอัดลมทุกวัน", i:"🥤"},
@@ -563,17 +393,15 @@ const QUESTIONS = [
   {q:"พฤติกรรมใดช่วยลดความเสี่ยงโรคอ้วน เบาหวาน ความดัน และโรคหัวใจพร้อมกัน?", a:"ออกกำลังกายสม่ำเสมอ", cell:"ออกกำลังกายสม่ำเสมอ"},
 ];
 
-const FREE_INDEX = 12; // กึ่งกลางบอร์ด
-
+const FREE_INDEX = 12;
 let board = [];
 let marked = new Set([FREE_INDEX]);
 let deck = [];
 let current = null;
 let revealed = false;
-let history = [];
+let historyData = [];
 let wonAlready = false;
 
-// ข้อมูลผู้เล่นและห้องเกม
 let roomCode = null;
 let playerId = null;
 let playerName = '';
@@ -584,21 +412,25 @@ let roomDrawIndex = 0;
 let roomDrawnAt = 0;
 let tickHandle = null;
 
-let supabase = null;
+// DOM
+const boardEl = document.getElementById('board');
+const questionText = document.getElementById('questionText');
+const answerReveal = document.getElementById('answerReveal');
+const answerText = document.getElementById('answerText');
+const drawBtn = document.getElementById('drawBtn');
+const revealBtn = document.getElementById('revealBtn');
+const deckCount = document.getElementById('deckCount');
+const hint = document.getElementById('hint');
+const historyList = document.getElementById('historyList');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const timerRing = document.getElementById('timerRing');
+const overlay = document.getElementById('overlay');
+const lobbyOverlay = document.getElementById('lobbyOverlay');
+const joinBtn = document.getElementById('joinBtn');
+const lobbyError = document.getElementById('lobbyError');
+const roomCodeDisplay = document.getElementById('roomCodeDisplay');
 
-// เชื่อมต่อ Supabase
-const supabaseUrl = 'https://qswyqlemlijsdnwbwqer.supabase.co';
-const supabaseKey = 'sb_publishable_asP8h59DXRFBPAAOxJMgyQ_7bdNApMQ';
-
-if (window.supabase) {
-  supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-} else {
-  console.error("Supabase library is missing!");
-}
-
-/* ==========================================
-   ฟังก์ชันตัวช่วย (Helpers)
-========================================== */
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -634,100 +466,64 @@ function genRoomCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
 function genPlayerId(){ return 'p_' + Math.random().toString(36).slice(2,9); }
 function initials(name){ return (name || '?').trim().slice(0,2).toUpperCase(); }
 
-/* ==========================================
-   เมื่อหน้าเว็บโหลดเสร็จ ให้ผูก Event ต่างๆ
-========================================== */
-document.addEventListener('DOMContentLoaded', () => {
-  const modeRadios = document.querySelectorAll('input[name="roomMode"]');
-  modeRadios.forEach(r => r.addEventListener('change', updateModeUI));
-  updateModeUI();
-
-  document.getElementById('joinBtn').addEventListener('click', handleJoin);
-  document.getElementById('drawBtn').addEventListener('click', drawCard);
-  document.getElementById('revealBtn').addEventListener('click', revealAnswerLocal);
-  document.getElementById('newGameBtn').addEventListener('click', resetMyBoard);
-  document.getElementById('playAgainBtn').addEventListener('click', () => { 
-    document.getElementById('overlay').classList.remove('show'); 
-    resetMyBoard(); 
-  });
-  document.getElementById('rulesToggle').addEventListener('click', () => {
-    document.getElementById('rulesPanel').classList.toggle('open');
-  });
-});
-
-/* ==========================================
-   ระบบ Lobby
-========================================== */
 function updateModeUI(){
-  const modeObj = document.querySelector('input[name="roomMode"]:checked');
-  if(!modeObj) return;
-  const mode = modeObj.value;
+  const mode = document.querySelector('input[name="roomMode"]:checked')?.value;
+  if(!mode) return;
   const creating = mode === 'create';
-  
-  const optCreate = document.getElementById('modeOptionCreate');
-  const optJoin = document.getElementById('modeOptionJoin');
+  const modeOptionCreate = document.getElementById('modeOptionCreate');
+  const modeOptionJoin = document.getElementById('modeOptionJoin');
   const maxPlayersField = document.getElementById('maxPlayersField');
   const roomCodeLabel = document.getElementById('roomCodeLabel');
   const roomCodeInput = document.getElementById('roomCodeInput');
-
-  if(optCreate) optCreate.classList.toggle('active', creating);
-  if(optJoin) optJoin.classList.toggle('active', !creating);
+  
+  if(modeOptionCreate) modeOptionCreate.classList.toggle('active', creating);
+  if(modeOptionJoin) modeOptionJoin.classList.toggle('active', !creating);
   if(maxPlayersField) maxPlayersField.style.display = creating ? 'block' : 'none';
   if(roomCodeLabel) roomCodeLabel.textContent = creating ? 'รหัสห้อง (เว้นว่างเพื่อสุ่มอัตโนมัติ)' : 'กรอกรหัสห้องที่ได้รับ';
   if(roomCodeInput) roomCodeInput.placeholder = creating ? 'เช่น 1234' : 'กรอกรหัสห้อง';
 }
 
+document.querySelectorAll('input[name="roomMode"]').forEach(r => {
+  r.addEventListener('change', updateModeUI);
+});
+// Initialize UI on load
+updateModeUI();
+
 async function handleJoin(){
-  const lobbyError = document.getElementById('lobbyError');
+  lobbyError.textContent = '';
   const playerNameInput = document.getElementById('playerNameInput');
   const gradeSelect = document.getElementById('gradeSelect');
   const maxPlayersInput = document.getElementById('maxPlayersInput');
   const roomCodeInput = document.getElementById('roomCodeInput');
-  const joinBtn = document.getElementById('joinBtn');
   
-  lobbyError.textContent = '';
-  
-  if (!supabase) {
-    lobbyError.textContent = 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (เน็ตอาจบล็อก Supabase) แนะนำให้ใช้เน็ตมือถือ (4G/5G) ทดสอบดูครับ';
-    return;
-  }
-
   const name = playerNameInput.value.trim();
   const grade = gradeSelect.value;
-  const modeObj = document.querySelector('input[name="roomMode"]:checked');
-  const mode = modeObj ? modeObj.value : 'join';
+  const mode = document.querySelector('input[name="roomMode"]:checked').value;
 
   if(!name){ lobbyError.textContent = 'กรุณากรอกชื่อผู้เล่น'; return; }
   if(!grade){ lobbyError.textContent = 'กรุณาเลือกระดับชั้น'; return; }
 
   joinBtn.disabled = true;
-  joinBtn.textContent = 'กำลังเชื่อมต่อฐานข้อมูล...';
+  joinBtn.textContent = 'กำลังเชื่อมต่อ...';
 
   try {
     if(mode === 'create'){
       let code = roomCodeInput.value.trim() || genRoomCode();
       const max = Math.max(1, Math.min(30, parseInt(maxPlayersInput.value, 10) || 4));
 
-      // สร้างห้องในตาราง rooms (โครงสร้างใหม่)
-      const { error: roomError } = await supabase
+      // 1) เพิ่มข้อมูลลงตาราง rooms
+      const { error: roomErr } = await supabase
         .from('rooms')
         .insert([{ room_code: code, max_players: max }]);
 
-      if (roomError) {
-        if(roomError.code === '23505') {
-          lobbyError.textContent = `รหัสห้อง ${code} มีคนใช้แล้ว โปรดเปลี่ยนรหัสใหม่ครับ`;
-        } else {
-          console.error("Room Insert Error:", roomError);
-          lobbyError.textContent = 'สร้างห้องไม่สำเร็จ ลองเช็คฐานข้อมูลอีกครั้งครับ';
-        }
-        joinBtn.disabled = false; 
-        joinBtn.textContent = 'เข้าสู่เกม';
-        return;
+      if (roomErr) {
+        if(roomErr.code === '23505') throw new Error('รหัสห้องนี้มีคนใช้แล้ว โปรดตั้งรหัสใหม่ครับ');
+        throw roomErr;
       }
       roomCode = code;
       maxPlayers = max;
     } else {
-      // โหมดเข้าร่วมห้องเดิม
+      // เข้าร่วมห้องเดิม ตรวจสอบจากตาราง rooms
       const code = roomCodeInput.value.trim();
       if(!code){
         lobbyError.textContent = 'กรุณากรอกรหัสห้อง';
@@ -738,23 +534,24 @@ async function handleJoin(){
       const { data, error } = await supabase
         .from('rooms')
         .select('*')
-        .eq('room_code', code);
+        .eq('room_code', code)
+        .single();
 
-      if (error || !data || data.length === 0) {
+      if (error || !data) {
         lobbyError.textContent = 'ไม่พบรหัสห้องนี้ในระบบ กรุณาตรวจสอบอีกครั้ง';
         joinBtn.disabled = false; joinBtn.textContent = 'เข้าสู่เกม';
         return;
       }
       roomCode = code;
-      maxPlayers = data[0].max_players || 4;
+      maxPlayers = data.max_players;
     }
 
     playerId = genPlayerId();
     playerName = name;
     playerGrade = grade;
 
-    // บันทึกชื่อผู้เล่นในตาราง room_progress (โครงสร้างใหม่)
-    const { error: progError } = await supabase
+    // 2) บันทึกรายชื่อผู้เล่นลง room_progress
+    const { error: progErr } = await supabase
       .from('room_progress')
       .insert([{
         room_code: roomCode,
@@ -766,122 +563,163 @@ async function handleJoin(){
         won: false
       }]);
       
-    if(progError) console.error("Progress Init Error:", progError);
+    if (progErr) {
+      if(progErr.code === '23505') throw new Error('ชื่อนี้เข้าร่วมห้องแล้ว กรุณาเปลี่ยนชื่อ');
+      throw progErr;
+    }
 
-    // เข้าสู่เกม
-    document.getElementById('lobbyOverlay').style.display = 'none';
-    document.getElementById('roomCodeDisplay').textContent = roomCode;
+    // เข้าระบบสำเร็จ!
+    lobbyOverlay.style.display = 'none';
+    roomCodeDisplay.textContent = roomCode;
     initRoomSession();
     
   } catch (err) {
-    console.error("Connection Exception:", err);
-    lobbyError.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย';
+    console.error("Supabase Connection Error:", err);
+    lobbyError.textContent = err.message || 'การเชื่อมต่อขัดข้อง กรุณาลองใหม่อีกครั้ง';
     joinBtn.disabled = false;
     joinBtn.textContent = 'เข้าสู่เกม';
   }
 }
 
-/* ==========================================
-   ระบบบิงโกและซิงค์ Realtime (โครงสร้าง 4 ตาราง)
-========================================== */
-async function initRoomSession(){
-  deck = seededShuffle(QUESTIONS, roomCode);
-  roomDrawIndex = 0;
-  roomDrawnAt = 0;
-  current = null;
-  revealed = false;
-  history = [];
-
-  const questionText = document.getElementById('questionText');
-  questionText.className = 'placeholder-text';
-  questionText.textContent = 'รอผู้เล่นคนแรกกดปุ่มจับการ์ดคำถามเพื่อเริ่มเกม';
-  
-  document.getElementById('answerReveal').classList.remove('show');
-  
-  const drawBtn = document.getElementById('drawBtn');
-  drawBtn.disabled = false;
-  drawBtn.textContent = 'จับการ์ดคำถาม';
-  
-  document.getElementById('revealBtn').disabled = true;
-  
-  renderHistory();
-  renderDeckCount();
-  resetMyBoard();
-  
-  // ดึงข้อมูลครั้งแรก
-  await fetchInitialDrawState();
-  await fetchPlayers();
-  await fetchWinners();
-
-  // เปิด Realtime
-  subscribeRealtime();
-
-  tickHandle && clearInterval(tickHandle);
-  tickHandle = setInterval(tick, 500);
-}
+joinBtn.addEventListener('click', handleJoin);
 
 let realtimeChannel = null;
 
 function subscribeRealtime() {
   if (realtimeChannel) supabase.removeChannel(realtimeChannel);
   
+  // เปิด WebSockets ไปยัง Supabase สำหรับ 3 ตาราง
   realtimeChannel = supabase.channel('room_updates_' + roomCode)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_draw', filter: `room_code=eq.${roomCode}` }, payload => {
-      syncDrawState(payload.new);
+      fetchDrawState(); // มีคนจั่วไพ่
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_progress', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchPlayers(); 
+      pollPlayers(); // มีคนได้คะแนนเพิ่ม
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_winners', filter: `room_code=eq.${roomCode}` }, payload => {
-      fetchWinners();
+      fetchWinners(); // มีคนบิงโก
     })
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Realtime status:", status);
+    });
 }
 
-async function fetchInitialDrawState() {
-  const { data, error } = await supabase.from('room_draw').select('*').eq('room_code', roomCode);
-  if (!error && data && data.length > 0) {
-    syncDrawState(data[0]);
+async function initRoomSession(){
+  deck = seededShuffle(QUESTIONS, roomCode);
+  roomDrawIndex = 0;
+  roomDrawnAt = 0;
+  current = null;
+  revealed = false;
+  historyData = [];
+
+  questionText.className = 'placeholder-text';
+  questionText.textContent = 'รอผู้เล่นคนแรกในห้องกดจับการ์ดคำถามเพื่อเริ่มเกม';
+  answerReveal.classList.remove('show');
+  drawBtn.disabled = false;
+  drawBtn.textContent = 'จับการ์ดคำถาม';
+  revealBtn.disabled = true;
+  
+  renderHistory();
+  renderDeckCount();
+  resetMyBoard();
+
+  // ดึงข้อมูลครั้งแรกเมื่อเข้าห้อง
+  await fetchDrawState();
+  await pollPlayers();
+  await fetchWinners();
+
+  // เริ่มฟัง Realtime
+  subscribeRealtime();
+
+  tickHandle && clearInterval(tickHandle);
+  tickHandle = setInterval(tick, 500);
+}
+
+async function fetchDrawState() {
+  const { data, error } = await supabase
+    .from('room_draw')
+    .select('*')
+    .eq('room_code', roomCode)
+    .single();
+    
+  if (!error && data) {
+    if (data.draw_index > roomDrawIndex) {
+      roomDrawIndex = data.draw_index;
+      roomDrawnAt = new Date(data.drawn_at).getTime();
+      current = deck[roomDrawIndex - 1];
+      revealed = false;
+      
+      questionText.className = 'question-text';
+      questionText.textContent = current.q;
+      answerReveal.classList.remove('show');
+      hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
+      hint.className = 'hint';
+      
+      drawBtn.disabled = true;
+      revealBtn.disabled = false;
+      renderDeckCount();
+    }
   }
 }
 
-function syncDrawState(newState) {
-  if(!newState || !newState.draw_index) return;
-  if(newState.draw_index > roomDrawIndex) {
-    roomDrawIndex = newState.draw_index;
-    roomDrawnAt = new Date(newState.drawn_at).getTime();
-    current = deck[roomDrawIndex - 1];
-    revealed = false;
-    
-    const questionText = document.getElementById('questionText');
-    questionText.className = 'question-text';
-    questionText.textContent = current.q;
-    
-    document.getElementById('answerReveal').classList.remove('show');
-    
-    const hint = document.getElementById('hint');
-    hint.textContent = 'ผู้เล่นมีเวลา 10 วินาทีในการคิดคำตอบ';
-    hint.className = 'hint';
-    
-    document.getElementById('drawBtn').disabled = true;
-    document.getElementById('revealBtn').disabled = false;
-    renderDeckCount();
+async function drawCard(){
+  if(roomDrawIndex >= deck.length) return;
+  if(roomDrawIndex > 0 && !revealed){
+    hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
+    hint.className = 'hint error';
+    return;
+  }
+  
+  drawBtn.disabled = true;
+  hint.textContent = 'กำลังจับการ์ด...';
+  
+  // เรียกใช้งาน RPC เพื่อป้องกัน Race condition จากคนหลายคนกดพร้อมกัน
+  const { error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
+  if (error) {
+    console.error("RPC Error:", error);
+    hint.textContent = 'จับการ์ดไม่สำเร็จ ลองใหม่อีกครั้ง';
+    hint.className = 'hint error';
+    drawBtn.disabled = false;
   }
 }
 
-async function fetchPlayers() {
-  const { data, error } = await supabase.from('room_progress').select('*').eq('room_code', roomCode);
-  if(!error && data) {
-    data.sort((a,b) => (b.marked || 0) - (a.marked || 0));
-    renderPlayers(data);
+function tick(){
+  if(!current || revealed) return;
+  const elapsed = Date.now() - roomDrawnAt;
+  const remaining = Math.max(10 - Math.floor(elapsed/1000), 0);
+  if(timerRing){
+    timerRing.classList.remove('hidden');
+    timerRing.setAttribute('data-t', remaining);
+    timerRing.style.setProperty('--pct', (remaining/10)*100);
   }
+  if(remaining <= 0){ revealAnswerLocal(); }
 }
 
-async function fetchWinners() {
-  const { data, error } = await supabase.from('room_winners').select('*').eq('room_code', roomCode).order('won_at', { ascending: true });
-  if(!error && data) {
-    renderWinnerBanner(data);
+function revealAnswerLocal(){
+  if(!current || revealed) return;
+  revealed = true;
+  if(timerRing) timerRing.classList.add('hidden');
+  if(answerText) answerText.textContent = current.a;
+  if(answerReveal) answerReveal.classList.add('show');
+  if(revealBtn) revealBtn.disabled = true;
+  
+  if(drawBtn){
+    drawBtn.disabled = roomDrawIndex >= deck.length;
+    drawBtn.textContent = roomDrawIndex >= deck.length ? 'จับการ์ดครบแล้ว' : 'จับการ์ดใบถัดไป';
   }
+  
+  const targetIdx = board.findIndex(c => c.t === current.cell);
+  if(hint){
+    if(targetIdx !== -1 && marked.has(targetIdx)){
+      hint.textContent = 'ช่องคำตอบนี้ถูกปิดไปแล้วก่อนหน้า จับใบถัดไปได้เลย';
+      hint.className = 'hint';
+    } else {
+      hint.textContent = 'แตะช่องบนกระดานที่ตรงกับคำตอบ';
+      hint.className = 'hint';
+    }
+  }
+  historyData.push({q: current.q, a: current.a});
+  renderHistory();
 }
 
 function resetMyBoard(){
@@ -894,25 +732,29 @@ function resetMyBoard(){
   }
   marked = new Set([FREE_INDEX]);
   wonAlready = false;
-  document.getElementById('overlay').classList.remove('show');
+  if(overlay) overlay.classList.remove('show');
   renderBoard();
   renderProgress();
-  syncMyProgressToDB(false); 
+  syncProgress(false); // อัปเดตไปที่ DB ว่าเริ่มกระดานใหม่ (0 คะแนน)
 }
 
 function renderDeckCount(){
-  const remaining = Math.max(0, deck.length - roomDrawIndex);
-  document.getElementById('deckCount').textContent = `เหลือ ${remaining} ใบ`;
+  if(deckCount){
+    const remaining = deck.length - roomDrawIndex;
+    deckCount.textContent = `เหลือ ${Math.max(0, remaining)} ใบ`;
+  }
 }
 
 function renderProgress(){
-  const count = marked.size - 1;
-  document.getElementById('progressLabel').textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
-  document.getElementById('progressFill').style.width = `${(count/24)*100}%`;
+  if(progressLabel && progressFill){
+    const count = marked.size - 1;
+    progressLabel.textContent = `ปิดไปแล้ว ${count}/24 ช่อง`;
+    progressFill.style.width = `${(count/24)*100}%`;
+  }
 }
 
 function renderBoard(winCells){
-  const boardEl = document.getElementById('board');
+  if(!boardEl) return;
   boardEl.innerHTML = '';
   board.forEach((cell, idx) => {
     const div = document.createElement('div');
@@ -927,27 +769,125 @@ function renderBoard(winCells){
 }
 
 function renderHistory(){
-  const historyList = document.getElementById('historyList');
+  if(!historyList) return;
   historyList.innerHTML = '';
-  history.slice().reverse().forEach((h, i) => {
+  historyData.slice().reverse().forEach((h, i) => {
     const div = document.createElement('div');
     div.className = 'history-item';
-    div.innerHTML = `<span class="num">${history.length - i}.</span><span>${h.q} — <b>${h.a}</b></span>`;
+    div.innerHTML = `<span class="num">${historyData.length - i}.</span><span>${h.q} — <b>${h.a}</b></span>`;
     historyList.appendChild(div);
   });
 }
 
-function renderPlayers(players){
-  document.getElementById('roomPlayerCount').textContent = `${players.length}/${maxPlayers}`;
-  document.getElementById('playersPanelCount').textContent = `${players.length} คน`;
+function handleCellClick(idx){
+  if(wonAlready || marked.has(idx)) return;
   
-  const playersList = document.getElementById('playersList');
-  if(players.length === 0){
-    playersList.innerHTML = '<div class="players-empty">กำลังโหลดรายชื่อ...</div>';
+  if(!current || !revealed){
+    if(hint){
+      hint.textContent = 'รอเพื่อนจับการ์ดคำถามและรอดูเฉลยก่อนนะ';
+      hint.className = 'hint error';
+    }
     return;
   }
   
-  playersList.innerHTML = '';
+  const cell = board[idx];
+  if(cell.t === current.cell){
+    marked.add(idx);
+    renderBoard();
+    renderProgress();
+    if(hint){
+      hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย!`;
+      hint.className = 'hint success';
+    }
+    syncProgress(false); // ส่งคะแนนไป Supabase
+    checkWin();
+  } else {
+    if(boardEl && boardEl.children[idx]){
+      const el = boardEl.children[idx];
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 350);
+    }
+    if(hint){
+      hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
+      hint.className = 'hint error';
+    }
+  }
+}
+
+async function syncProgress(isWon){
+  if(!roomCode || !playerId) return;
+  const { error } = await supabase
+    .from('room_progress')
+    .update({ 
+      marked: marked.size - 1, 
+      won: isWon,
+      updated_at: new Date().toISOString()
+    })
+    .eq('room_code', roomCode)
+    .eq('player_id', playerId);
+    
+  if (error) console.error("Sync Progress Error:", error);
+}
+
+function checkWin(){
+  const lines = [];
+  for(let r=0;r<5;r++) lines.push([0,1,2,3,4].map(c => r*5+c));
+  for(let c=0;c<5;c++) lines.push([0,1,2,3,4].map(r => r*5+c));
+  lines.push([0,6,12,18,24]);
+  lines.push([4,8,12,16,20]);
+
+  for(const line of lines){
+    if(line.every(i => marked.has(i))){
+      wonAlready = true;
+      renderBoard(line);
+      setTimeout(() => {
+        if(overlay) overlay.classList.add('show');
+      }, 350);
+      syncProgress(true);
+      announceWin();
+      return;
+    }
+  }
+}
+
+async function announceWin(){
+  await supabase.from('room_winners').insert([{ 
+    room_code: roomCode, 
+    player_id: playerId, 
+    name: playerName, 
+    grade: playerGrade 
+  }]);
+}
+
+async function pollPlayers(){
+  const { data, error } = await supabase
+    .from('room_progress')
+    .select('*')
+    .eq('room_code', roomCode);
+    
+  if(!error && data) {
+    // เรียงตามคะแนนที่มากที่สุด
+    data.sort((a,b) => (b.marked || 0) - (a.marked || 0));
+    renderPlayers(data);
+  }
+}
+
+function renderPlayers(players){
+  const roomPlayerCount = document.getElementById('roomPlayerCount');
+  const playersPanelCount = document.getElementById('playersPanelCount');
+  const playersListEl = document.getElementById('playersList');
+  
+  if(roomPlayerCount) roomPlayerCount.textContent = `${players.length}/${maxPlayers}`;
+  if(playersPanelCount) playersPanelCount.textContent = `${players.length} คน`;
+  
+  if(!playersListEl) return;
+  
+  if(players.length === 0){
+    playersListEl.innerHTML = '<div class="players-empty">กำลังโหลดรายชื่อผู้เล่น...</div>';
+    return;
+  }
+  
+  playersListEl.innerHTML = '';
   players.forEach(p => {
     const isMe = p.player_id === playerId;
     const pct = Math.round(((p.marked || 0) / (p.total || 24)) * 100);
@@ -965,170 +905,48 @@ function renderPlayers(players){
       </div>
       <div class="player-count">${p.marked || 0}/${p.total || 24}</div>
     `;
-    playersList.appendChild(row);
+    playersListEl.appendChild(row);
   });
+}
+
+async function fetchWinners() {
+  const { data, error } = await supabase
+    .from('room_winners')
+    .select('*')
+    .eq('room_code', roomCode)
+    .order('won_at', { ascending: true });
+    
+  if(!error && data) renderWinnerBanner(data);
 }
 
 function renderWinnerBanner(winners){
   const winnerBanner = document.getElementById('winnerBanner');
+  if(!winnerBanner) return;
+  
   if(!winners || winners.length === 0){
     winnerBanner.classList.remove('show');
     return;
   }
+  
   const first = winners[0];
   const extra = winners.length - 1;
   winnerBanner.textContent = extra > 0
-    ? `🏆 ${first.name} (${first.grade}) ได้บิงโก! และเพื่อนอีก ${extra} คน`
+    ? `🏆 ${first.name} (${first.grade}) บิงโก! และอีก ${extra} คน`
     : `🏆 ${first.name} (${first.grade}) ได้บิงโกแล้ว!`;
   winnerBanner.classList.add('show');
 }
 
-/* ==========================================
-   กลไกการเล่นและจัดการฐานข้อมูล
-========================================== */
-async function drawCard(){
-  const hint = document.getElementById('hint');
-  const drawBtn = document.getElementById('drawBtn');
-
-  if(roomDrawIndex >= deck.length){ return; }
-  if(roomDrawIndex > 0 && !revealed){
-    hint.textContent = 'รอให้เฉลยคำตอบใบปัจจุบันก่อน แล้วค่อยจับใบถัดไป';
-    hint.className = 'hint error';
-    return;
-  }
-  drawBtn.disabled = true;
-
-  // เรียกใช้ RPC function ที่คุณสร้างไว้ใน Supabase
-  const { data, error } = await supabase.rpc('draw_next_card', { p_room_code: roomCode });
-  if (error) {
-    console.error("RPC Error:", error);
-    hint.textContent = 'ระบบจับการ์ดขัดข้อง โปรดลองใหม่';
-    hint.className = 'hint error';
-    drawBtn.disabled = false;
-  }
-}
-
-function tick(){
-  if(!current || revealed) return;
-  const elapsed = Date.now() - roomDrawnAt;
-  const remaining = Math.max(10 - Math.floor(elapsed/1000), 0);
-  const timerRing = document.getElementById('timerRing');
-  
-  timerRing.classList.remove('hidden');
-  timerRing.setAttribute('data-t', remaining);
-  timerRing.style.setProperty('--pct', (remaining/10)*100);
-  
-  if(remaining <= 0){ revealAnswerLocal(); }
-}
-
-function revealAnswerLocal(){
-  if(!current || revealed) return;
-  revealed = true;
-  document.getElementById('timerRing').classList.add('hidden');
-  document.getElementById('answerText').textContent = current.a;
-  document.getElementById('answerReveal').classList.add('show');
-  document.getElementById('revealBtn').disabled = true;
-  
-  const drawBtn = document.getElementById('drawBtn');
-  drawBtn.disabled = roomDrawIndex >= deck.length;
-  drawBtn.textContent = roomDrawIndex >= deck.length ? 'จับการ์ดครบแล้ว' : 'จับการ์ดใบถัดไป';
-  
-  const targetIdx = board.findIndex(c => c.t === current.cell);
-  const hint = document.getElementById('hint');
-  
-  if(targetIdx !== -1 && marked.has(targetIdx)){
-    hint.textContent = 'ช่องคำตอบนี้ถูกปิดไปแล้วก่อนหน้า จับใบถัดไปได้เลย';
-    hint.className = 'hint';
-  } else {
-    hint.textContent = 'แตะช่องบนกระดานที่ตรงกับคำตอบ';
-    hint.className = 'hint';
-  }
-  
-  const isDuplicate = history.length > 0 && history[history.length-1].q === current.q;
-  if(!isDuplicate){
-    history.push({q: current.q, a: current.a});
-    renderHistory();
-  }
-}
-
-function handleCellClick(idx){
-  const hint = document.getElementById('hint');
-  if(wonAlready) return;
-  if(marked.has(idx)) return;
-  
-  if(!current || !revealed){
-    hint.textContent = 'จับการ์ดคำถามและรอดูเฉลยก่อนนะ';
-    hint.className = 'hint error';
-    return;
-  }
-  
-  const cell = board[idx];
-  if(cell.t === current.cell){
-    marked.add(idx);
-    renderBoard();
-    renderProgress();
-    hint.textContent = `ปิดช่อง "${cell.t}" เรียบร้อย`;
-    hint.className = 'hint success';
-    
-    syncMyProgressToDB(false);
-    checkWin();
-  } else {
-    const boardEl = document.getElementById('board');
-    if(boardEl && boardEl.children[idx]){
-      const el = boardEl.children[idx];
-      el.classList.add('shake');
-      setTimeout(() => el.classList.remove('shake'), 350);
-    }
-    hint.textContent = 'ช่องนี้ไม่ตรงกับคำตอบล่าสุด ลองดูใหม่อีกครั้ง';
-    hint.className = 'hint error';
-  }
-}
-
-function checkWin(){
-  const lines = [];
-  for(let r=0;r<5;r++) lines.push([0,1,2,3,4].map(c => r*5+c));
-  for(let c=0;c<5;c++) lines.push([0,1,2,3,4].map(r => r*5+c));
-  lines.push([0,6,12,18,24]);
-  lines.push([4,8,12,16,20]);
-
-  for(const line of lines){
-    if(line.every(i => marked.has(i))){
-      wonAlready = true;
-      renderBoard(line);
-      setTimeout(() => {
-        document.getElementById('overlay').classList.add('show');
-      }, 350);
-      syncMyProgressToDB(true);
-      announceWinToDB();
-      return;
-    }
-  }
-}
-
-async function syncMyProgressToDB(isWon){
-  if(!roomCode || !playerId) return;
-  await supabase
-    .from('room_progress')
-    .update({
-      marked: marked.size - 1,
-      won: isWon,
-      updated_at: new Date().toISOString()
-    })
-    .eq('room_code', roomCode)
-    .eq('player_id', playerId);
-}
-
-async function announceWinToDB(){
-  if(!roomCode || !playerId) return;
-  await supabase
-    .from('room_winners')
-    .insert([{
-      room_code: roomCode,
-      player_id: playerId,
-      name: playerName,
-      grade: playerGrade
-    }]);
-}
+if(drawBtn) drawBtn.addEventListener('click', drawCard);
+if(revealBtn) revealBtn.addEventListener('click', revealAnswerLocal);
+const newGameBtn = document.getElementById('newGameBtn');
+if(newGameBtn) newGameBtn.addEventListener('click', resetMyBoard);
+const playAgainBtn = document.getElementById('playAgainBtn');
+if(playAgainBtn) playAgainBtn.addEventListener('click', () => { if(overlay) overlay.classList.remove('show'); resetMyBoard(); });
+const rulesToggle = document.getElementById('rulesToggle');
+if(rulesToggle) rulesToggle.addEventListener('click', () => {
+  const rulesPanel = document.getElementById('rulesPanel');
+  if(rulesPanel) rulesPanel.classList.toggle('open');
+});
 </script>
 </body>
 </html>
